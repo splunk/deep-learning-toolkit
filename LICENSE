@@ -2,6 +2,26 @@
                            Version 2.0, January 2004
                         http://www.apache.org/licenses/
 
+Async http client/server framework (Apache 2.0) https://github.com/aio-libs/aiohttp
+attrs (MIT) https://github.com/python-attrs/attrs
+backports.ssl_match_hostname (Python Foundation) https://pypi.org/project/backports.ssl_match_hostname/
+boto3 (Apache 2.0) https://github.com/boto/boto3
+Docker Python SDK (Apache 2.0) https://github.com/docker/docker-py/
+Google Auth Python Library (Apache 2.0) https://github.com/googleapis/google-auth-library-python
+Jaeger Client Python (Apache 2.0) https://github.com/jaegertracing/jaeger-client-python
+Kubernetes Client Python (Apache 2.0) https://github.com/kubernetes-client/python
+Multidict (Apache 2.0) https://github.com/aio-libs/multidict
+OAuthLib (BSD 3-Clause) https://github.com/oauthlib/oauthlib
+OpenTracing (Apache 2.0) https://github.com/opentracing
+Requests: HTTP for Humans (Apache 2.0) http://python-requests.org and https://github.com/psf/requests
+Requests-OAuthlib (ISC License) https://github.com/requests/requests-oauthlib
+Splunk Python SDK (Apache 2.0) https://github.com/splunk/splunk-sdk-python/
+Apache Thrift (Apache 2.0) https://github.com/apache/thrift
+WebSocket client library for Python (BSD License / GNU) https://pypi.org/project/websocket_client/
+PyYAML (MIT) https://github.com/yaml/pyyaml
+yarl (Apache 2.0) https://github.com/aio-libs/yarl
+
+
    TERMS AND CONDITIONS FOR USE, REPRODUCTION, AND DISTRIBUTION
 
    1. Definitions.

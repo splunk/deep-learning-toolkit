@@ -8,7 +8,7 @@ If you're seeing some unexpected behavior with this project, please create an [i
 * Platform version (e.g. Windows Server 2012 R2)
 * Browser and version you're using (e.g. Chrome 80.0.3987)
 * Splunk version (e.g. 8.0.4)
-* Other relevant information
+* Any other relevant information
 
 ## Pull Requests
 We love to see your fixes via pull requests!

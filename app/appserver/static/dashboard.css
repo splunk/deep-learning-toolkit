@@ -1,0 +1,76 @@
+/* remove upper right close button from modal dialogs */
+
+.modal-dialog .close {
+    display: none;
+}
+
+/* ensure there is some whitespace form fields */
+
+.control-group {
+    margin-bottom: 20px;
+    display: block;
+}
+
+splunk-control-group.fix-label label {
+    padding-top: 10px !important;
+}
+
+splunk-control-group input[type="checkbox"] {
+    height: 20px !important;
+    width: 20px !important;
+}
+
+splunk-control-group input[type="checkbox"]+label {
+    padding-top: 4px;
+    padding-left: 0.5em;
+}
+
+splunk-control-group>div {
+    /*margin-left: 0 !important;
+    margin-right: 0 !important;*/
+}
+
+splunk-control-group div.splunk-dropdown {
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+}
+
+splunk-control-group div.splunk-choice-input-message {
+    display: none;
+}
+
+splunk-control-group splunk-search-dropdown {
+    width: 100%;
+}
+
+splunk-text-area.license textarea {
+    height: 100%;
+}
+
+splunk-control-group.help p {
+    /* padding-left: 10px !important;*/
+    /*font-style: italic;*/
+    color: gray;
+}
+
+.action-button {
+    float: left;
+    margin-right: 10px;
+}
+
+.btn-warn {
+    background-color: red;
+}
+
+.btn-warn:hover {
+    background-color: #c00;
+}
+
+button.btn.btn-small {
+    padding: 0.2em 0.4em;
+    margin-right: .6em;
+}
+
+a.action-link {
+    margin-right: 1em;
+}

@@ -1,0 +1,12 @@
+<form script="autodiscover.js,runtime.js" hideEdit="true">
+  <label>Runtime</label>
+  <row>
+    <panel>
+      <table>
+        <search>
+          <query>| rest splunk_server=local services/dltk/runtime/$name|u$</query>
+        </search>
+      </table>
+    </panel>
+  </row>
+</form>

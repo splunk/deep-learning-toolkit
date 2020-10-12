@@ -1,0 +1,41 @@
+---
+# Source: hdfs/charts/hdfs-config-k8s/templates/configmap.yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: my-hdfs-config
+  labels:
+    app: hdfs-client
+    chart: hdfs-config-k8s-0.1.0
+    release: my-hdfs
+data:
+  core-site.xml: |
+    <?xml version="1.0"?>
+    <?xml-stylesheet type="text/xsl" href="configuration.xsl"?>
+    <configuration>
+      <property>
+        <name>fs.defaultFS</name>
+        <value>hdfs://my-hdfs-namenode-0.my-hdfs-namenode.default.svc.cluster.local:8020</value>
+      </property>
+    </configuration>
+  hdfs-site.xml: |
+    <?xml version="1.0"?>
+    <?xml-stylesheet type="text/xsl" href="configuration.xsl"?>
+    <configuration>
+      <property>
+        <name>dfs.replication</name>
+        <value>1</value>
+      </property>
+      <property>
+        <name>dfs.namenode.name.dir</name>
+        <value>file:///hadoop/dfs/name</value>
+      </property>
+      <property>
+        <name>dfs.namenode.datanode.registration.ip-hostname-check</name>
+        <value>false</value>
+      </property>
+      <property>
+        <name>dfs.datanode.data.dir</name>
+        <value>/hadoop/dfs/data/0</value>
+      </property>
+    </configuration>

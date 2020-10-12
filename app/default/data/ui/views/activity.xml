@@ -1,0 +1,253 @@
+<form hideEdit="true">
+  <label>Activity</label>
+  <fieldset submitButton="false">
+    <input type="dropdown" token="algorithm" searchWhenChanged="true">
+      <label>Algorithm</label>
+      <choice value="*">Any Algorithm</choice>
+      <default>*</default>
+      <initialValue>*</initialValue>
+      <fieldForLabel>name</fieldForLabel>
+      <fieldForValue>name</fieldForValue>
+      <search>
+        <query>| rest splunk_server=local services/dltk/algorithms</query>
+      </search>
+    </input>
+    <input type="dropdown" token="anvironment" searchWhenChanged="true">
+      <label>Environment</label>
+      <choice value="*">Any Environment</choice>
+      <default>*</default>
+      <initialValue>*</initialValue>
+      <fieldForLabel>name</fieldForLabel>
+      <fieldForValue>name</fieldForValue>
+      <search>
+        <query>| rest splunk_server=local services/dltk/algorithms</query>
+      </search>
+    </input>
+    <input type="time" searchWhenChanged="true">
+      <label>Time</label>
+      <default>
+        <earliest>-24h@h</earliest>
+        <latest>now</latest>
+      </default>
+    </input>
+  </fieldset>
+  <row>
+    <panel>
+      <title>Infrastructure</title>
+      <single>
+        <search>
+          <query>| rest splunk_server=local "services/dltk/deployments" | stats count</query>
+          <earliest>$earliest$</earliest>
+          <latest>$latest$</latest>
+          <refresh>30s</refresh>
+          <refreshType>delay</refreshType>
+        </search>
+        <option name="drilldown">all</option>
+        <option name="rangeColors">["0x53a051","0x0877a6","0xf8be34","0xf1813f","0xdc4e41"]</option>
+        <option name="refresh.display">none</option>
+        <option name="underLabel">Algorithms Deployed</option>
+        <drilldown>
+          <link target="_self">algorithms?form.deployed_only=1</link>
+        </drilldown>
+      </single>
+      <single>
+        <search>
+          <query>| rest splunk_server=local "services/dltk/environments" | stats count</query>
+          <earliest>$earliest$</earliest>
+          <latest>$latest$</latest>
+          <refresh>30s</refresh>
+          <refreshType>delay</refreshType>
+        </search>
+        <option name="drilldown">all</option>
+        <option name="rangeColors">["0x53a051","0x0877a6","0xf8be34","0xf1813f","0xdc4e41"]</option>
+        <option name="refresh.display">none</option>
+        <option name="underLabel">Environments Connected</option>
+        <drilldown>
+          <link target="_self">environments</link>
+        </drilldown>
+      </single>
+    </panel>
+    <panel>
+      <title>Usage</title>
+      <single>
+        <search>
+          <query>index=_internal sourcetype=dltk algorithm="$algorithm$" starting execution setup | timechart span=1h dc(search_id)</query>
+          <earliest>$earliest$</earliest>
+          <latest>$latest$</latest>
+          <sampleRatio>1</sampleRatio>
+          <refresh>30s</refresh>
+          <refreshType>delay</refreshType>
+        </search>
+        <option name="colorBy">value</option>
+        <option name="colorMode">none</option>
+        <option name="drilldown">none</option>
+        <option name="numberPrecision">0</option>
+        <option name="rangeColors">["0x53a051","0x0877a6","0xf8be34","0xf1813f","0xdc4e41"]</option>
+        <option name="rangeValues">[0,30,70,100]</option>
+        <option name="refresh.display">none</option>
+        <option name="showSparkline">1</option>
+        <option name="showTrendIndicator">0</option>
+        <option name="trellis.enabled">0</option>
+        <option name="trellis.scales.shared">1</option>
+        <option name="trellis.size">medium</option>
+        <option name="trendColorInterpretation">standard</option>
+        <option name="trendDisplayMode">absolute</option>
+        <option name="trendInterval">-1h</option>
+        <option name="underLabel">Executions per Hour</option>
+        <option name="unitPosition">after</option>
+        <option name="useColors">0</option>
+        <option name="useThousandSeparators">1</option>
+      </single>
+      <single>
+        <search>
+          <query>index=_internal sourcetype=dltk algorithm="*" environment="*" 
+| stats earliest(_time) as start latest(_time) as end first(search) as search by search_id 
+| eval runtime = end-start 
+| eval _time=start
+| timechart span=1h avg(runtime) as runtime</query>
+          <earliest>$earliest$</earliest>
+          <latest>$latest$</latest>
+          <sampleRatio>1</sampleRatio>
+          <refresh>30s</refresh>
+          <refreshType>delay</refreshType>
+        </search>
+        <option name="colorBy">value</option>
+        <option name="colorMode">none</option>
+        <option name="drilldown">none</option>
+        <option name="numberPrecision">0</option>
+        <option name="rangeColors">["0x53a051","0x0877a6","0xf8be34","0xf1813f","0xdc4e41"]</option>
+        <option name="rangeValues">[0,30,70,100]</option>
+        <option name="refresh.display">none</option>
+        <option name="showSparkline">1</option>
+        <option name="showTrendIndicator">0</option>
+        <option name="trellis.enabled">0</option>
+        <option name="trellis.scales.shared">1</option>
+        <option name="trellis.size">medium</option>
+        <option name="trendColorInterpretation">standard</option>
+        <option name="trendDisplayMode">absolute</option>
+        <option name="trendInterval">-1h</option>
+        <option name="underLabel">Avg. Execution Runtime</option>
+        <option name="unit">s</option>
+        <option name="unitPosition">after</option>
+        <option name="useColors">0</option>
+        <option name="useThousandSeparators">1</option>
+      </single>
+    </panel>
+  </row>
+  <row>
+    <panel>
+      <title>Transferred Data Between Splunk and Execution Environments</title>
+      <chart>
+        <search>
+          <query>index=_internal sourcetype=dltk "begin command handler" OR "command handler ended" | timechart sum(chunk_size) by algorithm</query>
+          <earliest>$earliest$</earliest>
+          <latest>$latest$</latest>
+          <sampleRatio>1</sampleRatio>
+          <refresh>30s</refresh>
+          <refreshType>delay</refreshType>
+        </search>
+        <option name="charting.axisLabelsX.majorLabelStyle.overflowMode">ellipsisNone</option>
+        <option name="charting.axisLabelsX.majorLabelStyle.rotation">0</option>
+        <option name="charting.axisTitleX.visibility">collapsed</option>
+        <option name="charting.axisTitleY.text">Bytes</option>
+        <option name="charting.axisTitleY.visibility">visible</option>
+        <option name="charting.axisTitleY2.visibility">visible</option>
+        <option name="charting.axisX.abbreviation">none</option>
+        <option name="charting.axisX.scale">linear</option>
+        <option name="charting.axisY.abbreviation">none</option>
+        <option name="charting.axisY.scale">log</option>
+        <option name="charting.axisY2.abbreviation">none</option>
+        <option name="charting.axisY2.enabled">0</option>
+        <option name="charting.axisY2.scale">inherit</option>
+        <option name="charting.chart">area</option>
+        <option name="charting.chart.bubbleMaximumSize">50</option>
+        <option name="charting.chart.bubbleMinimumSize">10</option>
+        <option name="charting.chart.bubbleSizeBy">area</option>
+        <option name="charting.chart.nullValueMode">zero</option>
+        <option name="charting.chart.showDataLabels">none</option>
+        <option name="charting.chart.sliceCollapsingThreshold">0.01</option>
+        <option name="charting.chart.stackMode">default</option>
+        <option name="charting.chart.style">shiny</option>
+        <option name="charting.drilldown">none</option>
+        <option name="charting.layout.splitSeries">0</option>
+        <option name="charting.layout.splitSeries.allowIndependentYRanges">0</option>
+        <option name="charting.legend.labelStyle.overflowMode">ellipsisMiddle</option>
+        <option name="charting.legend.mode">standard</option>
+        <option name="charting.legend.placement">bottom</option>
+        <option name="charting.lineWidth">2</option>
+        <option name="height">306</option>
+        <option name="refresh.display">none</option>
+        <option name="trellis.enabled">0</option>
+        <option name="trellis.scales.shared">1</option>
+        <option name="trellis.size">medium</option>
+      </chart>
+    </panel>
+  </row>
+  <row>
+    <panel>
+      <title>Most Used Models</title>
+      <table>
+        <search>
+          <query>index=_internal sourcetype=dltk algorithm="*" | chart sparkline(dc(search_id)) as trend dc(search_id) as count by model | sort - count</query>
+          <earliest>$earliest$</earliest>
+          <latest>$latest$</latest>
+          <sampleRatio>1</sampleRatio>
+          <refresh>30s</refresh>
+          <refreshType>delay</refreshType>
+        </search>
+        <option name="count">100</option>
+        <option name="dataOverlayMode">none</option>
+        <option name="drilldown">none</option>
+        <option name="percentagesRow">false</option>
+        <option name="refresh.display">none</option>
+        <option name="rowNumbers">false</option>
+        <option name="totalsRow">false</option>
+        <option name="wrap">true</option>
+      </table>
+    </panel>
+    <panel>
+      <title>Most Used Algorithm Methods</title>
+      <table>
+        <search>
+          <query>index=_internal sourcetype=dltk algorithm="*" | chart sparkline(dc(search_id)) as trend dc(search_id) as count by method | sort - count</query>
+          <earliest>$earliest$</earliest>
+          <latest>$latest$</latest>
+          <refresh>30s</refresh>
+          <refreshType>delay</refreshType>
+        </search>
+        <option name="drilldown">none</option>
+        <option name="refresh.display">none</option>
+      </table>
+    </panel>
+  </row>
+  <row>
+    <panel>
+      <title>Most Used DLTK Searches</title>
+      <table>
+        <search>
+          <query>index=_internal sourcetype=dltk algorithm="*" environment="*" 
+| stats earliest(_time) as start latest(_time) as end first(search) as search by search_id algorithm environment 
+| eval runtime = end-start 
+| stats max(runtime) as _max_runtime median(runtime) as _median_runtime count by search 
+| fieldformat "max_runtime" = `dltk_convert_runtime('_max_runtime')` 
+| fieldformat "median_runtime" = `dltk_convert_runtime('_median_runtime')` 
+| sort - _max_runtime
+| eval search=urldecode(search)</query>
+          <earliest>$earliest$</earliest>
+          <latest>$latest$</latest>
+          <sampleRatio>1</sampleRatio>
+          <refresh>30s</refresh>
+          <refreshType>delay</refreshType>
+        </search>
+        <option name="count">100</option>
+        <option name="dataOverlayMode">none</option>
+        <option name="drilldown">none</option>
+        <option name="percentagesRow">false</option>
+        <option name="refresh.display">progressbar</option>
+        <option name="rowNumbers">false</option>
+        <option name="totalsRow">false</option>
+        <option name="wrap">true</option>
+      </table>
+    </panel>
+  </row>
+</form>

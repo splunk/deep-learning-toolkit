@@ -1,0 +1,16 @@
+<form hideEdit="true">
+  <label>Runtimes</label>
+  <row>
+    <panel>
+      <table>
+        <search>
+          <query>| rest splunk_server=local services/dltk/runtimes | fields - splunk_server | table name *</query>
+        </search>
+        <option name="drilldown">row</option>
+        <drilldown>
+          <link target="_self">runtime?name=$row.name$</link>
+        </drilldown>
+      </table>
+    </panel>
+  </row>
+</form>

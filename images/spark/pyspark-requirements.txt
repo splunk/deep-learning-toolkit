@@ -1,0 +1,2 @@
+numpy==1.18.4 # is this required?
+py4j==0.10.9

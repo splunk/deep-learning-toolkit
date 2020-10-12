@@ -1,0 +1,17 @@
+<form script="autodiscover.js" hideEdit="true">
+  <label>Environments</label>
+  <description>For the biology term, see Biophysical environment. For other uses, see Environment. "Natural force" redirects here. For the album by Bonnie Tyler, see Natural Force.</description>
+  <row>
+    <panel>
+      <html>
+        <div id="pagecontrols" class="splunk-view" data-require="app/$env:app$/dashboards/environments/environmentcontrols"/>
+      </html>
+      <html>
+        <div id="tableview" class="splunk-view" 
+          data-require="app/$env:app$/dashboards/environments/environmentstableview" 
+          data-basequery='| rest splunk_server=local services/dltk/environments | fields - splunk_server | rename  name as Name, connector as Connector | table Name Connector Actions'
+        />
+      </html>
+    </panel>
+  </row>
+</form>

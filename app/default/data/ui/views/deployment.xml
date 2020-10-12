@@ -1,0 +1,135 @@
+<form script="deployment.js" stylesheet="deployment.css" hideEdit="true">
+  <label>Deployment</label>
+  <search id="deployment_search">
+    <query>| rest splunk_server=local "services/dltk/deployment/$algorithm|u$/$environment|u$"</query>
+    <earliest>-24h@h</earliest>
+    <latest>now</latest>
+    <refresh>3s</refresh>
+    <refreshType>delay</refreshType>
+  </search>
+  <fieldset submitButton="false"></fieldset>
+  <row>
+    <panel>
+      <single>
+        <title>Status</title>
+        <search base="deployment_search">
+          <query>| table status 
+          | eval status = upper(substr(status,1,1)).substr(status,2) </query>
+        </search>
+        <option name="drilldown">none</option>
+        <option name="useColors">0</option>
+      </single>
+      <html>
+        <p id="status_message_text" style="display: none;">
+          Error
+        </p>
+        <button id="restart-button" class="btn" style="display: none;">
+          Restart
+        </button>
+        <button id="disable-button" class="btn" style="display: none;">
+          Disable
+        </button>
+        <button id="enable-button" class="btn" style="display: none;">
+          Enable
+        </button>
+      </html>
+      <html>
+        <h3>Editor</h3>
+        <button id="start-editor-button" class="btn" style="display: none;">
+          Start
+        </button>
+        <button id="stop-editor-button" class="btn btn-primary btn-warn" style="display: none;">
+          Stop
+        </button>
+        <button id="open-editor-button" class="btn btn-primary" style="display: none;">
+          Open
+        </button>
+      </html>
+    </panel>
+    <panel>
+      <table>
+        <title>Configuration</title>
+        <search base="deployment_search">
+          <query>| fields param.*
+          | rename param.* as *
+          | untable _ param value
+          | table param value</query>
+        </search>
+        <option name="count">10</option>
+        <option name="drilldown">none</option>
+        <option name="refresh.display">none</option>
+      </table>
+      <html>
+        <button id="edit-button" class="btn">Edit</button>
+        <div id="edit-dialog" style="display: none" title="Edit Configuration">
+          <div class="body">
+            <table class="table table-striped params" style="width: 100%;">
+              <tr>
+                <th>Parameter</th>
+                <th>Value</th>
+                <th>Actions</th>
+              </tr>
+            </table>
+          </div>
+          <div class="footer">
+            <button class="btn btn-primary apply" data-dismiss="modal" style="margin-right: 1em">Apply</button>
+            <button class="btn cancel" data-dismiss="modal">Cancel</button>
+          </div>
+        </div>
+      </html>
+    </panel>
+    <panel>
+      <html>
+        <button id="open-create-model-dialog-button" class="btn">Add Model</button>
+        <div id="create-model-dialog" style="display: none;" title="Create Model">
+          <div class="body form-horizontal">
+            <p>Model Name:</p>
+            <div id="model_name" class="splunk-view" data-require="splunkjs/mvc/textinputview">
+            </div>
+          </div>
+          <div class="footer">
+            <button class="btn btn-primary create" data-dismiss="modal" style="margin-right: 1em">Create</button>
+            <button class="btn" data-dismiss="modal">Cancel</button>
+          </div>
+        </div>
+      </html>
+      <table>
+        <title>Models</title>
+        <search>
+          <query>| rest splunk_server=local services/dltk/models environment="$environment$" algorithm="$algorithm$" | fields - splunk_server environment algorithm | table name *</query>
+          <earliest>-24h@h</earliest>
+          <latest>now</latest>
+        </search>
+        <option name="drilldown">row</option>
+        <drilldown>
+          <link target="_self">model?name=$name$</link>
+        </drilldown>
+      </table>
+    </panel>
+  </row>
+  <row>
+    <panel>
+      <title>Monitoring</title>
+      <input type="time" token="monitoring_time" searchWhenChanged="true">
+        <label>Time Range</label>
+        <default>
+          <earliest>-60m@m</earliest>
+          <latest>now</latest>
+        </default>
+      </input>
+      <event>
+        <title>Logs</title>
+        <search>
+          <query>index=_internal algorithm="$algorithm$" environment="$environment$"</query>
+          <earliest>$monitoring_time.earliest$</earliest>
+          <latest>$monitoring_time.latest$</latest>
+          <refresh>10s</refresh>
+          <refreshType>delay</refreshType>
+        </search>
+        <option name="count">20</option>
+        <option name="drilldown">none</option>
+        <option name="refresh.display">progressbar</option>
+      </event>
+    </panel>
+  </row>
+</form>

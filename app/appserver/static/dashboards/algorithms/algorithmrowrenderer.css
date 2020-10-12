@@ -1,0 +1,55 @@
+.row-container {
+    width: 100%;
+    height: 100%;
+    background-color: transparent;
+    margin-bottom: 23px;
+    font-family: Splunk Platform Sans,Proxima Nova,Roboto,Droid,Helvetica Neue,Helvetica,Arial,sans-serif;
+    white-space: nowrap;
+}
+
+.expanded-content-row > td{
+    background-color: white;
+    border-top: 1px solid gray;
+}
+
+.environments-container {
+    min-width: 450px;
+}
+
+.row-expansion-toggle {
+    padding-left: 0px;
+}
+
+.environments-container{
+    float: none;
+    margin-right: 10px;
+    min-width: 400px;
+    width: 99%;
+}
+
+.methods-container{
+    float: none;
+    margin-right: 10px;
+    min-width: 400px;
+    width: 99%;
+}
+
+.visualization-container{
+    background-color: transparent;
+}
+
+
+.row-expansion-toggle {
+    padding-left: 0px !important;
+}
+
+#rowinrow {
+    float: left;
+    width: 50%;
+    white-space: nowrap;
+}
+
+.menu-container{
+    display: inline-flex;
+    float: right;
+}

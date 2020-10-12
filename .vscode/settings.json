@@ -1,0 +1,45 @@
+{
+    "files.exclude": {
+        "**/*.pyc": true,
+        "**/*.pyo": true
+    },
+    "python.formatting.autopep8Args": [
+        "--ignore=E402",
+        "--max-line-length=200"
+    ],
+    "python.envFile": "${workspaceFolder}/.env",
+    "python.autoComplete.extraPaths": [],
+    "python.linting.pylintEnabled": false,
+    "python.linting.pylintArgs": [
+        //"--init-hook",
+        //"import sys; sys.path.append('${workspaceFolder}/app/bin')"
+    ],
+    "files.watcherExclude": {
+        "**/.git/objects/**": true,
+        "**/.git/subtree-cache/**": true,
+        "**/node_modules/*/**": true,
+        "**/.hg/store/**": true,
+        "**/bin/aiohttp/**": true,
+        "**/bin/async_timeout/**": true,
+        "**/bin/attr/**": true,
+        "**/bin/backports/**": true,
+        "**/bin/boto3/**": true,
+        "**/bin/certifi/**": true,
+        "**/bin/docker/**": true,
+        "**/bin/google/**": true,
+        "**/bin/dhfs/**": true,
+        "**/bin/jaeger_client/**": true,
+        "**/bin/kubernetes/**": true,
+        "**/bin/multidict": true,
+        "**/bin/oauthlib": true,
+        "**/bin/opentracing": true,
+        "**/bin/requests": true,
+        "**/bin/requests_oauthlib": true,
+        "**/bin/splunklib": true,
+        "**/bin/thrift": true,
+        "**/bin/websocket": true,
+        "**/bin/websocket2": true,
+        "**/bin/yaml": true,
+        "**/bin/yarl": true,
+    },
+}

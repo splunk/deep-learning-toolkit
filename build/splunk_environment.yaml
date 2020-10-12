@@ -1,0 +1,14 @@
+apiVersion: enterprise.splunk.com/v1alpha2
+kind: Standalone
+metadata:
+  name: dltk
+  finalizers:
+    - enterprise.splunk.com/delete-pvc
+#spec:
+  #resources:
+  #  requests:
+  #    cpu: ".1"
+  #    memory: 1Gi
+  #  limits:
+  #    cpu: "2"
+  #    memory: 2Gi

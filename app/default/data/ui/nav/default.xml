@@ -1,0 +1,14 @@
+<nav>
+  <view name="overview" />
+  <view name="activity" default="true" />
+  <view name="algorithms" />
+  <view name="models" />
+  <collection label="Examples">
+      <view name="dashboards" />
+  </collection>
+  <collection label="Configuration">
+    <view name="environments" />
+    <view name="runtimes" />
+  </collection>
+  <view name="search" />
+</nav>

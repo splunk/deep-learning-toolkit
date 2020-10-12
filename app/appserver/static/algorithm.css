@@ -1,0 +1,21 @@
+#params_panel {
+    width: 35% !important;
+}
+
+#methods_panel {
+    width: 65% !important;
+}
+
+#status_message_text {
+    text-align: center;
+    color: gray;
+    font-style: italic;
+}
+
+.modal-dialog div[data-component$="Dropdown"] {
+    width: 100% !important;
+}
+
+.table.params td {
+    vertical-align: inherit;
+}

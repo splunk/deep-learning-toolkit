@@ -1,0 +1,6 @@
+Flask==1.1.1
+waitress==1.4.3
+hdfs
+git+git://github.com/signalfx/jaeger-client-python
+opentracing
+signalfx-tracing

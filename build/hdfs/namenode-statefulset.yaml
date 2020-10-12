@@ -1,0 +1,72 @@
+---
+# Source: hdfs/charts/hdfs-simple-namenode-k8s/templates/namenode-statefulset.yaml
+# A headless service to create DNS records.
+apiVersion: v1
+kind: Service
+metadata:
+  name: my-hdfs-namenode
+  labels:
+    app: hdfs-namenode
+    chart: hdfs-simple-namenode-k8s-0.1.0
+    release: my-hdfs
+spec:
+  ports:
+  - port: 8020
+    name: fs
+  clusterIP: None
+  selector:
+    app: hdfs-namenode
+    release: my-hdfs
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: my-hdfs-namenode
+  labels:
+    app: hdfs-namenode
+    chart: hdfs-simple-namenode-k8s-0.1.0
+    release: my-hdfs
+spec:
+  serviceName: my-hdfs-namenode
+  # Create a size-1 set.
+  replicas: 1
+  selector:
+    matchLabels:
+      app: hdfs-namenode
+      release: my-hdfs
+  template:
+    metadata:
+      labels:
+        app: hdfs-namenode
+        release: my-hdfs
+    spec:
+      # Use hostNetwork so datanodes connect to namenode without going through an overlay network
+      # like weave. Otherwise, namenode fails to see physical IP address of datanodes.
+      hostNetwork: true
+      hostPID: true
+      dnsPolicy: ClusterFirstWithHostNet
+      containers:
+        - name: hdfs-namenode
+          image: uhopper/hadoop-namenode:2.7.2
+          env:
+            - name: HADOOP_CUSTOM_CONF_DIR
+              value: /etc/hadoop-custom-conf
+            - name: CLUSTER_NAME
+              value: hdfs-k8s
+          ports:
+          - containerPort: 8020
+            name: fs
+          volumeMounts:
+            - name: hdfs-name
+              mountPath: /hadoop/dfs/name
+            - name: hdfs-config
+              mountPath: /etc/hadoop-custom-conf
+              readOnly: true
+      restartPolicy: Always
+      volumes:
+        - name: hdfs-name
+          hostPath:
+            path: /hdfs-name
+        - name: hdfs-config
+          configMap:
+            name: my-hdfs-config

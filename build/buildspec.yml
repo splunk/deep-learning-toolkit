@@ -1,0 +1,129 @@
+version: 0.2
+
+env:
+  variables:
+    WORKER_COUNT: "1"
+
+phases:
+  install:
+    commands:
+      - BUILD_DIR=$CODEBUILD_SRC_DIR/build
+      - IMAGES_DIR=$CODEBUILD_SRC_DIR/images
+      # build spark images
+      - SPARK_DIR=$IMAGES_DIR/spark
+      - SPARK_DRIVER_IMAGE=hovu96/dltk-spark-runtime:driver-thin
+      - SPARK_DRIVER_PROXY_IMAGE=hovu96/dltk-spark-runtime:driver-proxy
+      - SPARK_EDITOR_IMAGE=hovu96/dltk-spark-runtime:editor-thin
+      - SPARK_INBOUND_RELAY_IMAGE=hovu96/dltk-spark-runtime:inbound-relay
+      - SPARK_OUTBOUND_RELAY_IMAGE=hovu96/dltk-spark-runtime:outbound-relay
+      - cd $SPARK_DIR
+      - docker build --rm -f "./driver/thin.Dockerfile" -t $SPARK_DRIVER_IMAGE .
+      - docker build --rm -f "./driver-proxy/Dockerfile" -t $SPARK_DRIVER_PROXY_IMAGE .
+      - docker build --rm -f "./editor/thin.Dockerfile" -t $SPARK_EDITOR_IMAGE .
+      - docker build --rm -f "./inbound-relay/Dockerfile" -t $SPARK_INBOUND_RELAY_IMAGE .
+      - docker build --rm -f "./outbound-relay/Dockerfile" -t $SPARK_OUTBOUND_RELAY_IMAGE .
+      # Install K3D
+      - wget -q -O - https://raw.githubusercontent.com/rancher/k3d/main/install.sh | bash
+      # Install HELM
+      - curl https://raw.githubusercontent.com/helm/helm/master/scripts/get-helm-3 | bash
+      # Render Spark Operator charts
+      - SPARK_OPERATOR=/spark_operator
+      - mkdir $SPARK_OPERATOR
+      - helm repo add incubator http://storage.googleapis.com/kubernetes-charts-incubator
+      - helm template sparkoperator incubator/sparkoperator --set sparkJobNamespace=default --set serviceAccounts.sparkoperator.name=default --set serviceAccounts.spark.name=default --set operatorVersion=v1beta2-1.2.0-3.0.0 --set enableWebhook=true --output-dir=$SPARK_OPERATOR
+      - rm $SPARK_OPERATOR/sparkoperator/templates/webhook-cleanup-job.yaml
+      - rm $SPARK_OPERATOR/sparkoperator/templates/crd-cleanup-job.yaml
+      #- ls $SPARK_OPERATOR/sparkoperator/templates/
+      # Render HAProxy
+      # https://github.com/helm/charts/tree/master/incubator/haproxy-ingress#configuration
+      # https://github.com/jcmoraisjr/haproxy-ingress/blob/v0.6/README.md#rewrite-target
+      - HAPROXY=/haproxy
+      - mkdir $HAPROXY
+      - helm repo add ingress-nginx https://kubernetes-charts-incubator.storage.googleapis.com
+      - helm template haproxy incubator/haproxy-ingress --namespace default --set-string "controller.config.ssl-redirect=false" --output-dir=$HAPROXY
+  build:
+    commands:
+      # Start Kubernetes Cluster (https://k3d.io/usage/commands/)
+      - k3d cluster delete dltkbuild || true
+      - k3d cluster create dltkbuild --wait --agents 0
+      - k3d cluster list
+      - K3D_ID=$(docker ps -aqf name=k3d-dltkbuild-serverlb)
+      - KUBECONFIG_PATH=/kubeconfig
+      - k3d kubeconfig get dltkbuild >> /tmp/$KUBECONFIG_PATH
+      - printf '%s\n\n' "$(tail -n +2 /tmp/$KUBECONFIG_PATH)" >> $KUBECONFIG_PATH
+      - sed -i 's/\(server:.*\):.\+/\1:6443/g' $KUBECONFIG_PATH
+      # Build Helm
+      - mkdir /helm
+      - echo "FROM alpine/helm\n" > /helm/Dockerfile
+      - echo "RUN mkdir /tmp/.kube" >> /helm/Dockerfile
+      - echo "RUN echo $'\\" >> /helm/Dockerfile
+      - cat $KUBECONFIG_PATH | awk -v ORS='\\n\\\n' 1 >> /helm/Dockerfile
+      - echo "' > /tmp/.kube/config\n" >> /helm/Dockerfile
+      - docker build -t helm /helm/.
+      - docker run --network=container:$K3D_ID --rm --name helm -e "KUBECONFIG=/tmp/.kube/config" helm version
+      # Build Kubectl
+      - mkdir /kubectl
+      - echo "FROM bitnami/kubectl\n" > /kubectl/Dockerfile
+      - echo "RUN mkdir /tmp/.kube" >> /kubectl/Dockerfile
+      - echo "RUN echo $'\\" >> /kubectl/Dockerfile
+      - cat $KUBECONFIG_PATH | awk -v ORS='\\n\\\n' 1 >> /kubectl/Dockerfile
+      - echo "' > /tmp/.kube/config\n" >> /kubectl/Dockerfile
+      - docker build -t kubectl /kubectl/.
+      # Wait for Kubernetes Cluster
+      - docker run --network=container:$K3D_ID --rm -e "KUBECONFIG=/tmp/.kube/config" kubectl get nodes
+      - echo "waiting for nodes ..."; docker run --network=container:$K3D_ID --rm -e "KUBECONFIG=/tmp/.kube/config" kubectl wait --for=condition=Ready node --all
+      - docker run --network=container:$K3D_ID --rm -e "KUBECONFIG=/tmp/.kube/config" -i kubectl version
+      - docker run --network=container:$K3D_ID --rm -e "KUBECONFIG=/tmp/.kube/config" -i kubectl create clusterrolebinding default-service-account-cluster-admin  --clusterrole=cluster-admin --serviceaccount=default:default
+      # Start HAProxy
+      - find $HAPROXY -name '*.yaml' -type f | xargs -I % sh -c 'cat %; printf "\n---\n"' | docker run --network=container:$K3D_ID --rm -e "KUBECONFIG=/tmp/.kube/config" -i kubectl apply -f -
+      # Start Spark Operator
+      - find $SPARK_OPERATOR -name '*.yaml' -type f | xargs -I % sh -c 'cat %; printf "\n---\n"' | docker run --network=container:$K3D_ID --rm -e "KUBECONFIG=/tmp/.kube/config" -i kubectl apply -f -
+      # Start Ingress Controller
+      - cat $BUILD_DIR/nginx.yaml | docker run --network=container:$K3D_ID --rm -e "KUBECONFIG=/tmp/.kube/config" -i kubectl apply -f -
+      # Start HDFS
+      - find $BUILD_DIR/hdfs -name '*.yaml' -type f | xargs -I % sh -c 'cat %; printf "\n---\n"' | docker run --network=container:$K3D_ID --rm -e "KUBECONFIG=/tmp/.kube/config" -i kubectl apply -f -
+      # Start Splunk Operator
+      - cat $BUILD_DIR/splunk_operator_for_kubernetes.yaml | docker run --network=container:$K3D_ID --rm -e "KUBECONFIG=/tmp/.kube/config" -i kubectl apply -f -
+      # Start Splunk
+      - cat $BUILD_DIR/splunk_environment.yaml | docker run --network=container:$K3D_ID --rm -e "KUBECONFIG=/tmp/.kube/config" -i kubectl apply -f -
+      # Import Spark images
+      - k3d image import $SPARK_DRIVER_IMAGE $SPARK_DRIVER_PROXY_IMAGE $SPARK_EDITOR_IMAGE $SPARK_OUTBOUND_RELAY_IMAGE $SPARK_INBOUND_RELAY_IMAGE -c dltkbuild
+      # Wait for Spark Operator
+      - echo "waiting for Spark operator ..."; docker run --network=container:$K3D_ID --rm -e "KUBECONFIG=/tmp/.kube/config" kubectl wait --for=condition=available --timeout=5m deployment/sparkoperator
+      # Wait for HDFS
+      - echo "waiting for hdfs datanode ..."; while [ "$(docker run --network=container:$K3D_ID --rm -e "KUBECONFIG=/tmp/.kube/config" kubectl get ds my-hdfs-datanode -o 'jsonpath={..status.numberReady}')" != "1" ]; do sleep 1; done
+      - echo "waiting for hdfs namenode ..."; while [ "$(docker run --network=container:$K3D_ID --rm -e "KUBECONFIG=/tmp/.kube/config" kubectl get statefulset my-hdfs-namenode | grep 1/1 | wc -l)" != "1" ]; do sleep 1; done
+      # Wait for Splunk Operator
+      - echo "waiting for Splunk operator ..."; docker run --network=container:$K3D_ID --rm -e "KUBECONFIG=/tmp/.kube/config" kubectl wait --for=condition=available --timeout=1m deployment/splunk-operator
+      # Wait for Splunk
+      - echo "waiting for Splunk ..."; while [ "$(docker run --network=container:$K3D_ID --rm -e "KUBECONFIG=/tmp/.kube/config" kubectl get standalone dltk -o 'jsonpath={..status.phase}')" != "Ready" ]; do sleep 1; done
+      - SPLUNK_ADMIN_PASSWORD="$(docker run --network=container:$K3D_ID --rm -e KUBECONFIG=/tmp/.kube/config kubectl get secret splunk-dltk-standalone-secrets -o jsonpath='{.data.password}' | base64 --decode)"
+      # Package DLTK
+      - pip install semantic_version
+      - wget https://download.splunk.com/misc/packaging-toolkit/splunk-packaging-toolkit-1.0.1.tar.gz
+      - pip install splunk-packaging-toolkit-1.0.1.tar.gz
+      - DLTK_PACKAGE_DIR=/dltk_build
+      - mkdir $DLTK_PACKAGE_DIR
+      # https://dev.splunk.com/enterprise/docs/releaseapps/packagingtoolkit/pkgtoolkitref/packagingtoolkitcli#slim-package
+      - mv $CODEBUILD_SRC_DIR/app $CODEBUILD_SRC_DIR/dltk
+      - slim package -o $DLTK_PACKAGE_DIR $CODEBUILD_SRC_DIR/dltk
+      - mv $CODEBUILD_SRC_DIR/dltk $CODEBUILD_SRC_DIR/app
+      - DLTK_PACKAGE=$(find $DLTK_PACKAGE_DIR -maxdepth 1 -type f -name '*.tar.gz')
+      - DLTK_PACKAGE_NAME=$(basename $DLTK_PACKAGE)
+      # Install DLTK
+      - TARGET_SPLUNK_POD_NAME="splunk-dltk-standalone-0"
+      - cat $DLTK_PACKAGE | docker run --network=container:$K3D_ID -i --rm -e KUBECONFIG=/tmp/.kube/config kubectl exec -i $TARGET_SPLUNK_POD_NAME -- /bin/bash -c 'cat > /tmp/dltk.tgz'
+      - docker run --network=container:$K3D_ID --rm -e KUBECONFIG=/tmp/.kube/config kubectl exec $TARGET_SPLUNK_POD_NAME -- /opt/splunk/bin/splunk install app -auth admin:${SPLUNK_ADMIN_PASSWORD} /tmp/dltk.tgz
+      - docker run --network=container:$K3D_ID --rm -e KUBECONFIG=/tmp/.kube/config kubectl exec $TARGET_SPLUNK_POD_NAME -- sed -i '/^\[general\]/a python.version = python3' /opt/splunk/etc/system/local/server.conf
+      - docker run --network=container:$K3D_ID --rm -e KUBECONFIG=/tmp/.kube/config kubectl exec $TARGET_SPLUNK_POD_NAME -- /opt/splunk/bin/splunk restart
+      # Run tests
+      - cd $CODEBUILD_SRC_DIR
+      - tar -czvf /tmp/source.tar.gz *
+      - docker run --network=container:$K3D_ID --rm -e KUBECONFIG=/tmp/.kube/config kubectl exec $TARGET_SPLUNK_POD_NAME -- mkdir /tmp/source
+      - cat "/tmp/source.tar.gz" | docker run --network=container:$K3D_ID -i --rm -e KUBECONFIG=/tmp/.kube/config kubectl exec -i $TARGET_SPLUNK_POD_NAME -- /bin/bash -c 'cat > /tmp/source.tar.gz'
+      - docker run --network=container:$K3D_ID --rm -e KUBECONFIG=/tmp/.kube/config kubectl exec $TARGET_SPLUNK_POD_NAME -- tar zxf /tmp/source.tar.gz -C /tmp/source
+      - echo "$SPLUNK_ADMIN_PASSWORD" | docker run --network=container:$K3D_ID -i --rm -e KUBECONFIG=/tmp/.kube/config kubectl exec -i $TARGET_SPLUNK_POD_NAME -- /bin/bash -c 'cat > /tmp/SPLUNK_ADMIN_PASSWORD'
+      - docker run --network=container:$K3D_ID --rm -e KUBECONFIG=/tmp/.kube/config kubectl exec $TARGET_SPLUNK_POD_NAME -- /bin/bash -c 'SPLUNK_PASSWORD="$(cat /tmp/SPLUNK_ADMIN_PASSWORD)" DLTK_INGRESS_URL="http://haproxy-haproxy-ingress-controller/" DLTK_INGRESS_CLASS="haproxy" DLTK_HDFS_HTTP_URL="http://my-hdfs-namenode:50070" DLTK_HDFS_URL="hdfs://my-hdfs-namenode" DLTK_APP_NAME="dltk" SKIP_TEST_UNLESS_=ListEnvironmentTestCase /opt/splunk/bin/splunk cmd python3 /tmp/source/test/test.py'
+  post_build:
+    commands:
+      - k3d cluster delete dltkbuild

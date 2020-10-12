@@ -1,0 +1,42 @@
+---
+# Source: hdfs/charts/hdfs-client-k8s/templates/client-deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: my-hdfs-client
+  labels:
+    app: hdfs-client
+    chart: hdfs-client-k8s-0.1.0
+    release: my-hdfs
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: hdfs-client
+      release: my-hdfs
+  template:
+    metadata:
+      labels:
+        app: hdfs-client
+        release: my-hdfs
+    spec:
+      containers:
+        - name: hdfs-client
+          image: uhopper/hadoop:2.7.2
+          env:
+            - name: HADOOP_CUSTOM_CONF_DIR
+              value: /etc/hadoop-custom-conf
+            - name: MULTIHOMED_NETWORK
+              value: "0"
+          command: ['/bin/sh', '-c']
+          args:
+            - /entrypoint.sh /usr/bin/tail -f /var/log/dmesg
+          volumeMounts:
+            - name: hdfs-config
+              mountPath: /etc/hadoop-custom-conf
+              readOnly: true
+      restartPolicy: Always
+      volumes:
+        - name: hdfs-config
+          configMap:
+            name: my-hdfs-config

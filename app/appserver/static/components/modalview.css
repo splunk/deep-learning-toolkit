@@ -1,0 +1,109 @@
+.textvalue {
+    width: 300px;
+}
+
+.pickervalue {
+    width: 300px;
+}
+
+.control-label {
+    margin-right: 8px;
+}
+
+.modal {
+    min-width: 720px;
+}
+
+.alert {
+    margin-bottom: 0px !important;
+}
+
+.splunk-choice-input-message {
+    margin:0px;
+    padding:0px;
+}
+
+.splunk-choice-input-message {
+    display: none;
+}
+
+.runtime,.environment
+{
+    display: none;   
+}
+
+.unimportant-form {
+    display: none;
+}
+
+.error-container {
+    background: transparent;
+    padding: 6px 6px 6px 12px;
+    border: solid #fe473b 1px;
+    border-radius: 7px;
+    margin-top: 10px;
+    display: none;
+    vertical-align: center;
+    -webkit-box-shadow: 0px 0px 4px  #fe473b;
+    -moz-box-shadow: 0px 0px 4px  #fe473b;
+         box-shadow: 0px 0px 4px  #fe473b; 
+}
+
+.info-container {
+    background: transparent;
+    padding: 6px 6px 6px 12px;
+    border: solid rgb(236, 248, 255) 1px;
+    border-radius: 7px;
+    margin-top: 10px;
+    display: none;
+    vertical-align: center;
+    -webkit-box-shadow: 0px 0px 4px rgb(236, 248, 255);
+    -moz-box-shadow: 0px 0px 4px rgb(236, 248, 255);
+         box-shadow: 0px 0px 4px rgb(236, 248, 255); 
+}
+
+.element-more {
+    text-align: center;
+}
+
+.element-more-input {
+    margin-left: 4px;
+}
+
+.splunk-viz-msg {
+    height: 106px !important;
+}
+
+.ConditionalExtras i {
+    font-size: 2em;
+    text-align: center;
+}
+
+.ConditionalExtras div {
+    margin: 3px;
+}
+
+.advanced-settings:hover {
+    cursor: pointer
+}
+
+.menu-click:hover {
+    cursor: pointer
+}
+
+.menu-click  {
+    color: #3e3e3e;
+    float: right;
+}
+
+.results-table tr.expanded-row td, .results-table tr.expanded-content-row td  {
+    background-color: white !important;
+}
+
+.form-horizontal .control-label {
+    float: left;
+    width: 234px;
+    padding-top: 5px;
+    text-align: right;
+}
+

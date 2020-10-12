@@ -1,0 +1,12 @@
+<dashboard hideEdit="true">
+  <label>Models</label>
+  <row>
+    <panel>
+      <table>
+        <search>
+          <query>| rest splunk_server=local services/dltk/models | fields - splunk_server | table name *</query>
+        </search>
+      </table>
+    </panel>
+  </row>
+</dashboard>

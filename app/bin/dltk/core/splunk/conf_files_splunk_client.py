@@ -24,14 +24,14 @@ class ConfigurationStanza(object):
         if self._content is None:
             self._content = {}
             if self._default_parser:
-                if "default" in self._default_parser._sections:
+                if self._default_parser.has_section("default"):
                     self._content.update(self._default_parser._sections["default"])
-                if self.name in self._default_parser._sections:
+                if self._default_parser.has_section(self.name):
                     self._content.update(self._default_parser._sections[self._name])
             if self._local_parser:
-                if "default" in self._local_parser._sections:
+                if self._local_parser.has_section("default"):
                     self._content.update(self._local_parser._sections["default"])
-                if self.name in self._local_parser._sections:
+                if self._local_parser.has_section(self.name):
                     self._content.update(self._local_parser._sections[self._name])
         return self._content
 
@@ -117,7 +117,7 @@ class Configurations(object):
             parser = ConfigParser(
                 delimiters=('='),
                 strict=False,
-                default_section="default",
+                default_section="__default__",
             )
             # encoding=encoding
             with open(path, "r") as fp:

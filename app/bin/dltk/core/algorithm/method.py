@@ -44,7 +44,4 @@ class Method(object):
 
     @property
     def command_type(self):
-        v= self.get_param("command_type")
-        if not v:
-            return "reporting"
-        return v
+        return self.get_param("command_type")

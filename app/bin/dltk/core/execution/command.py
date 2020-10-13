@@ -175,10 +175,11 @@ class ExecutionCommand(object):
             raise Exception("method '%s' does not exist" % method_name)
 
         if "max_buffer_size" in command_options:
-            self.max_buffer_size = command_options["max_buffer_size"]
+            max_buffer_size = command_options["max_buffer_size"]
         else:
-            self.max_buffer_size = method.max_buffer_size
-        if self.max_buffer_size == "auto" or self.max_buffer_size == "default" or self.max_buffer_size.strip() == "":
+            max_buffer_size = method.max_buffer_size
+        if not max_buffer_size or max_buffer_size == "auto":
+            # keep initial class value
             pass
         elif self.max_buffer_size == "all":
             self.max_buffer_size = 0
@@ -190,7 +191,7 @@ class ExecutionCommand(object):
             command_type = method.command_type
         else:
             command_type = command_options["type"]
-        
+
         opentracing_endpoint = self.deployment.environment.opentracing_endpoint
         opentracing_user = self.deployment.environment.opentracing_user
         opentracing_password = self.deployment.environment.opentracing_password
@@ -306,8 +307,6 @@ class ExecutionCommand(object):
                     self.die("Unexpected error starting deployment execution: %s" % (
                         ', '.join(traceback.format_exception_only(type(e), e))
                     ))
-
-        self.execution.logger.info("command_type: %s" % command_type)
 
         # mltk fit: EVENTS
         # mltk apply: streaming or stateful

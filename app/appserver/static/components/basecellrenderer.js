@@ -14,7 +14,7 @@ define([
         },
         _targetModel : function(arg,cellData) {
             let rowdata = [];
-            let status,entityname,environment,url,name,runtime,method;
+            let status,entityname,environment,url,name,runtime,method,connector;
             arg.callee &&  arg.callee.caller &&  arg.callee.caller.arguments &&  arg.callee.caller.arguments[2] && (rowdata = arg.callee.caller.arguments[2]);
             _.each(rowdata,function(valueobj){
                 switch(valueobj.field.toLowerCase()){
@@ -40,6 +40,9 @@ define([
                     case('runtime'):
                         runtime = _.escape(valueobj.value);
                         break;
+                    case('connector'):
+                        connector = _.escape(valueobj.value);
+                        break;
                 }
             });
             let _model = {
@@ -49,6 +52,7 @@ define([
                 status:status,
                 runtime:runtime,
                 cellData: cellData,
+                connector: connector,
                 type: this.typestring ?? 'algorithm',
                 method: method
             };

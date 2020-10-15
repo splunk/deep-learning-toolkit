@@ -30,6 +30,7 @@ define(
                     allowEditAlgorithm: !this.collection ? false : typeof(this.collection.type)==='string' && this.collection.type =='algorithms',
                     allowDeleteMethod: !this.collection ? false : typeof(this.collection.type)==='string' && this.collection.type =='methods',
                     allowDeleteEnvironment:!this.collection ? false : typeof(this.collection.type)==='string' && this.collection.type =='environments',
+                    allowEditEnvironment:!this.collection ? false : typeof(this.collection.type)==='string' && this.collection.type =='environments',
                     textEnableDisable: this._actionModel.status == 'deployed' ? "Disable" : "Enable"
                 };
             },
@@ -73,6 +74,10 @@ define(
                 'click a.edit-algorithm': function (e) {
                     e.preventDefault();
                     this._triggerControllerEvent('action:edit-algorithm',this,this._actionModel);
+                },
+                'click a.edit-environment': function (e) {
+                    e.preventDefault();
+                    this._triggerControllerEvent('action:edit-environment',this,this._actionModel);
                 }
             },
             _triggerControllerEvent: function () {
@@ -103,6 +108,9 @@ define(
                         <% } %>\
                         <% if (allowEditAlgorithm) { %>\
                             <li><a href="#" class="edit-algorithm"><%- _("Edit Settings").t() %></a></li>\
+                        <% } %>\
+                        <% if (allowEditEnvironment) { %>\
+                            <li><a href="#" class="edit-environment"><%- _("Edit Settings").t() %></a></li>\
                         <% } %>\
                         <% if (allowRestartDeployment) { %>\
                             <li><a href="#" class="restart-deployment"><%- _("Restart").t() %></a></li>\

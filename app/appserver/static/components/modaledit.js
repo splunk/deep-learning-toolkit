@@ -4,17 +4,12 @@ define([
     './modalview',
     'models/Base',
     'splunkjs/mvc',
-    './dropdownview',
-    'splunkjs/mvc/searchmanager',
-    './textinputview',
     './parametereditview',
     'views/datapreview/shared/Tab',
-    'views/shared/controls/ControlGroup',
-    'views/shared/FlashMessages',
-    './parametertabmodel',
+   './parametertabmodel',
     'css!./modalview.css'
     ], 
-    function(_, $, Modal, BaseModel, mvc, DropdownView, SearchManager, TextInputView, ParameterEditView, Tab, ControlGroup, FlashMessagesView, TabModel) {
+    function(_, $, Modal, BaseModel, mvc, ParameterEditView, Tab, TabModel) {
         var FieldModel = BaseModel.extend({
             validation: {
                 value: function(value, attr, computedState) {
@@ -146,8 +141,7 @@ define([
             },
             setPanels: function() {
                 this.children.views[0].activate().$el.show();
-                if (this.children.length > 1)
-                {
+                if (this.children.length > 1) {
                     for (var i=1; i<this.children.length;i++){
                         this.children.views[i].activate().$el.hide();
                     }
@@ -156,10 +150,7 @@ define([
             activate: function(options) {
                 var clonedOptions = _.extend({}, (options || {}));
                 delete clonedOptions.deep;
-
                 this.ensureDeactivated({deep: true});
-
-                //BaseView.prototype.activate.call(this, clonedOptions);
                 this.manageStateOfChildren();
                 return this;
             },
@@ -173,7 +164,7 @@ define([
             manageStateOfChildren: function() {
                 var tab = this.model.activeTab.get('tab');
                 for (let i=0; i<this.children.views.length; i++){
-                    if (this.tab_collection[i]==tab){
+                    if (this.tab_collection[i]==tab) {
                        this.children.views[i].activate().$el.show();
                     } else {
                         this.children.views[i].activate().$el.hide();

@@ -36,7 +36,7 @@ define([
             $td.attr("width","10");
             $td.append(_.template(this.templateMenuContainer)(this._targetModel(arguments,cellData)));
         },
-        templateMenuContainer : '<div class="menu-container"><i class="caret menu-click" data-type="<%-type%>" data-entityname="<%-entityname%>" data-method="<%-method%>" data-environment="<%-environment%>" data-status="<%-status%>" data-runtime="<%-runtime%>" data-url="<%-url%>" ></i></div>',
+        templateMenuContainer : '<div class="menu-container"><i class="caret menu-click" data-type="<%-type%>" data-entityname="<%-entityname%>" data-method="<%-method%>" data-environment="<%-environment%>" data-status="<%-status%>" data-runtime="<%-runtime%>" data-connector="<%-connector%>" data-url="<%-url%>" ></i></div>',
       
     });
     return MenuCellRenderer;

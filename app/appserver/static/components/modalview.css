@@ -27,7 +27,7 @@
     display: none;
 }
 
-.runtime,.environment
+.runtime,.environment,.connector
 {
     display: none;   
 }
@@ -85,6 +85,10 @@
 
 .advanced-settings:hover {
     cursor: pointer
+}
+
+a {
+    white-space: normal !important;
 }
 
 .menu-click:hover {

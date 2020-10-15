@@ -13,10 +13,28 @@ define([
     ], 
     function(_, $, Modal, BaseModel, mvc, DropdownView, SearchManager, TextInputView, ControlGroup, FlashMessagesView) {
         var FieldModel = BaseModel.extend({
-            validation: {
-                value: function(value, attr, computedState) {
-                    if (_.isEmpty(value)) return _("Please enter a value.").t()
+            element : {},
+            init : function(options){
+                this.options = options;
+                this.element = mvc.Components.get(options.id);
+            },
+            get_value : function(){
+                this.element = mvc.Components.get(this.options.id);
+                let state = this.element.getState();
+                let val = null;
+                state.value && (val = state.value);
+                state.choices && (val = state.choices.length>0 ? state.value : null);
+                this.value = val;
+                return val;
+            },
+            validate : function() {
+                this.get_value();
+                let error = {key: 'token-' + this.options.id, type: 'error', html: ''};
+                if (_.isEmpty(this.value) && (this.options.mandatory && this.options.mandatory === true)){ 
+                    error['html'] = _(`'${this.options.label}' must not be empty.`).t();
+                    return error;
                 }
+                return true;
             }
         }); 
         var BUTTON_CREATE = '<a role="button" href="#" class="btn btn-primary modal-btn-primary btn-save">Create</a>';
@@ -29,7 +47,7 @@ define([
                 title : 'Not Set',
                 primarybutton : BUTTON_CREATE
             },
-            updatefieldmodel: function(objects){
+            updatefieldmodel: function(objects, tag=""){
                 var _self = this;
                 if (objects) {
                     _.each(objects, function(child){
@@ -38,6 +56,7 @@ define([
                         !child.type && (child.type = 'text');
                         typeof(child.important) == 'undefined' && (child.important = false);
                         child.fieldmodel = new FieldModel(child);
+                        child.fieldmodel.init({id : child.id ,label:child.label, type:child.type, tag: tag, mandatory: child.mandatory});
                         if (mvc.Components.get(child.id)){
                             mvc.Components.revokeInstance(child.id);
                         }
@@ -76,6 +95,7 @@ define([
                                     showClearButton: false,
                                     disabled : child.readonly === true,
                                     className: child.mandatory ? "pickervalue mandatory":"pickervalue",
+                                    model: child.fieldmodel,
                                     width: 300,
                                     change: function(e){
                                         if (_self.model && typeof(_self.model.fieldchangehandler)=="function"){
@@ -99,6 +119,7 @@ define([
                                     value: child.value ?? (child.default ?? '' ),
                                     disabled : child.readonly === true,
                                     className: child.mandatory ? "textvalue mandatory":"textvalue",
+                                    model: child.fieldmodel,
                                     defaultvalue: child.default
                                 });
                                 break;
@@ -109,7 +130,7 @@ define([
             },
             initialize: function(options) {
                 Modal.prototype.initialize.apply(this, arguments), this.action = this.options.action;
-                this.options = _.extend({}, this.defaults, this.options);
+                this.options = _.extend({}, this.defaults);
                 this.options.flashMessages = new FlashMessagesView({ model: {}});
                 this.options.flashMessages.activate();
                 this.options.infoMessages = new FlashMessagesView({ model: {}});
@@ -151,25 +172,20 @@ define([
                 'click .save': async function(e){
                     $('.error-container').hide();
                     e.preventDefault();
-                    var returnvalue = [];
+                    var returnvalue = {};
                     var _self = this;
                     _self.options.flashMessages.flashMsgCollection.reset();
                     _.each($('.pickervalue,.textvalue'),function(child){
-                        var state = mvc.Components.get(child.id).getState();
-                        state.value && (returnvalue[child.id] = state.value);
-                        state.choices && (returnvalue[child.id] = state.choices.length>0 ? state.value : null);
-                    });
-                    _.each($('.mandatory'),function(child){
-                        var state = mvc.Components.get(child.id).getState();
-                        state.value && (returnvalue[child.id] = state.value);
-                        state.choices && (returnvalue[child.id] = state.choices.length>0 ? state.value : null);
-                        if (!returnvalue[child.id]){
+                        let $el = mvc.Components.get(child.id), tag = null;
+                        $el.options.model && $el.options.model.options.tag && (tag = $el.options.model.options.tag);
+                        if (!returnvalue[tag]){
+                            returnvalue[tag] = [];
+                        }
+                        returnvalue[tag][child.id] = $el.options.model.get_value();
+                        var validationresult = $el.options.model.validate();
+                        if ( validationresult !== true){
                             $('.error-container').show('fast');
-                            _self.options.flashMessages.flashMsgCollection.add({
-                                key: 'token-'+child.id,
-                                type: 'error',
-                                html: _.escape(_(child.id + " must not be empty.").t())
-                            });
+                            _self.options.flashMessages.flashMsgCollection.add(validationresult);
                         }
                     });
                     if (_self.options.flashMessages.flashMsgCollection.length > 0){
@@ -224,20 +240,22 @@ define([
                 });
             },
             addfields: function(fields, tag=""){
-                this.model.children = this._addfields(fields,tag);
+                this.model.children = $.merge(this.model.children ?? [], this._addfields(fields,tag));
             },
             _addfields: function(fields, tag=""){
-                var children = this.updatefieldmodel(fields);
+                var children = this.updatefieldmodel(fields, tag);
                 var $importantForm = this.$(".important-form");
                 var $unimportantForm = this.$(".unimportant-form");
                 var $baseForm = this.$(".base-form");
                 var $container = this.$("."+tag);
                 _.each(children, function(child) {
                     var element = $unimportantForm;
+                    child.tag = tag;
                     switch(tag){
                         case 'base':
                                 element = $baseForm;
                             break;
+                        case 'connector':
                         case 'runtime':
                         case 'environment':
                             $('.' + tag).show();
@@ -303,6 +321,12 @@ define([
                                 <div class="card runtime advanced-settings">\
                                 </div>\
                                 <div class="card runtime">\
+                                    <div class="unimportant-form form-horizontal">\
+                                    </div>\
+                                </div>\
+                                <div class="card connector advanced-settings">\
+                                </div>\
+                                <div class="card connector">\
                                     <div class="unimportant-form form-horizontal">\
                                     </div>\
                                 </div>\

@@ -49,7 +49,7 @@ define([
                 title: 'Create Environment',
                 changedFields: {},
                 model: {
-                    children: NewEnvironmentFields,
+                    children: JSON.parse(JSON.stringify(NewEnvironmentFields)),
                     cancelhandler: async function (e) {
                         $Modal.children.createDialog.changedFields = {};
                         return true;
@@ -73,6 +73,16 @@ define([
                         var value = evt.target.value;
                         var fieldname = evt.currentTarget.id;
                         $Modal.children.createDialog.changedFields[fieldname] = value;
+                        if ("connector" == fieldname) {
+                            $Modal.children.createDialog.removefields($('.connector').find('.textvalue,.pickervalue'));
+                            const result = await rest.createRestEndpoint().getAsync(`environment_params`, { connector: encodeURIComponent($Modal.children.createDialog.changedFields['connector']) });
+                            const fieldconfig = await rest.getResponseContents(result);
+                            var input = [];
+                            _.each(fieldconfig, function (field) {
+                                input.push(field);
+                            });
+                            $Modal.children.createDialog.addfields(input,"connector");
+                        }
                     }
                 },
                 onHiddenRemove: !0,
@@ -83,14 +93,14 @@ define([
             $Modal.children.createDialog.show();
         },
         edit_environment : async function(element,model){
-        /*    var $Modal = element;
+            var $Modal = element;
             var deployments = {};
             var algorithm_params = [];
             var deployment_params = [];
             var children = [];
             try 
             {
-                result = await rest.createRestEndpoint().getAsync(`algorithm_params`, { algorithm: model.entityname, include_deployments:1});
+                result = await rest.createRestEndpoint().getAsync(`environment_params`, { environment: model.entityname, include_deployments:1});
                 if (!result.data || !result.data.entry || !result.data.entry[0] || !result.data.entry[0].content){
                     return;
                 }
@@ -134,27 +144,14 @@ define([
                     },
                     savehandler: async function (r, el) {
                         var algorithm = {};
-                        var _m = {algorithm : model.entityname};
+                        var _m = {environment : model.entityname};
                         for (var subkey in r.algoparams){
                             if (typeof(r.algoparams[subkey])=='function')
                                 continue;
 
                             _m[subkey]=r.algoparams[subkey];
                         }
-                        await rest.createRestEndpoint().putAsync(`algorithm_params`, _m);
-                        
-                        for (var key in r.deploymentparams){
-                            if (typeof(r.deploymentparams[key])=='function')
-                                continue;
-                                
-                            var _m = {algorithm : model.entityname,environment: key};
-                            for (var subkey in  r.deploymentparams[key]){
-                                if (typeof(r.deploymentparams[subkey])=='function')
-                                    continue;
-                                _m[subkey]=r.deploymentparams[key][subkey];
-                            }
-                            await rest.createRestEndpoint().putAsync(`deployment_params`, _m);
-                        }
+                        await rest.createRestEndpoint().putAsync(`environment_params`, _m);
                     },
                     savedhandler: async function (el, m) {
                         $Modal.children.createDialog.changedFields = {};
@@ -176,7 +173,7 @@ define([
             });
             $Modal.children.createDialog.changedFields = {};
             $("body").append($Modal.children.createDialog.render().el), 
-            $Modal.children.createDialog.show();*/
+            $Modal.children.createDialog.show();
         },
         delete_environment : async function(e,model){
             e.children.deleteDialog = new ModalConfirm({

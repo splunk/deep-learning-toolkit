@@ -29,7 +29,7 @@ define([
                 <% if (url) { %>\
                 <a class="external editor btn-pill" data-entityname="<%-entityname%>" data-status="<%-status%>" data-environment="<%-environment%>" data-url="<%-url%>">Editor</a>\
                 <% } %>\
-                <a class="icon-chevron-down btn-pill menu-click" data-type="<%-type%>" data-entityname="<%-entityname%>" data-method="<%-method%>" data-environment="<%-environment%>" data-status="<%-status%>" data-runtime="<%-runtime%>" data-url="<%-url%>" ></a>\
+                <a class="icon-chevron-down btn-pill menu-click" data-type="<%-type%>" data-entityname="<%-entityname%>" data-method="<%-method%>" data-environment="<%-environment%>" data-status="<%-status%>" data-runtime="<%-runtime%>" data-connector="<%-connector%>"  data-url="<%-url%>"></a>\
             </div>',
         
     });

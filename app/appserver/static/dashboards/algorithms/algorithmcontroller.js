@@ -62,24 +62,35 @@ define([
                 title: 'Create Algorithm',
                 changedFields: {},
                 model: {
-                    children: NewAlgorithmFields,
+                    children: JSON.parse(JSON.stringify(NewAlgorithmFields)),
                     cancelhandler: async function (e) {
                         $Modal.children.createDialog.changedFields = {};
                         return true;
                     },
-                    savehandler: async function (r, el) {
+                    savehandler: async function (modalvalues, el) {
                         var algorithm = {};
-                        for (var key in r){
-                            if (r[key] && typeof(r[key])!='function')
-                                algorithm[key] = _.escape(_(r[key]).t());
-                        }
-                        await rest.createRestEndpoint().postAsync(`algorithms`, algorithm);
-                        if (algorithm['environment']){
-                            var deployment = {
-                                algorithm: _.escape(_(algorithm["name"]).t()),
-                                environment: _.escape(_(algorithm["environment"]).t()) 
-                            }                            
-                            await rest.createRestEndpoint().postAsync(`deployments`, deployment);
+                        let r = modalvalues['base'], p = modalvalues['runtime'];
+                        if (r){
+                            for (var key in r){
+
+                                if (r[key] && typeof(r[key])!='function')
+                                    algorithm[key] = _.escape(_(r[key]).t());
+                            }
+                            await rest.createRestEndpoint().postAsync(`algorithms`, algorithm);
+                            if (algorithm['environment']){
+                                var deployment = {
+                                    algorithm: _.escape(_(algorithm["name"]).t()),
+                                    environment: _.escape(_(algorithm["environment"]).t()) 
+                                }                            
+                                await rest.createRestEndpoint().postAsync(`deployments`, deployment);
+                            }
+                            if (p){
+                                for (var key in p){
+                                    if (p[key] && typeof(p[key])!='function')
+                                        algorithm[key] = _.escape(_(p[key]).t());
+                                }
+                                await rest.createRestEndpoint().putAsync(`algorithm_params`, algorithm);
+                            }
                         }
                     },
                     savedhandler: async function (el, m) {

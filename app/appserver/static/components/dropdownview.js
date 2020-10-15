@@ -2,6 +2,7 @@ define(function(require, exports, module) {
     var _ = require('underscore');
     var BaseChoiceView = require("splunkjs/mvc/basechoiceview");
     var Dropdown = require('splunkjs/mvc/components/Dropdown');
+    
     //20200826 We need this cause std dropdownview has no exposed changeevent
     var DropdownView = BaseChoiceView.extend({/** @lends splunkjs.mvc.DropdownView.prototype */
         moduleId: module.id,

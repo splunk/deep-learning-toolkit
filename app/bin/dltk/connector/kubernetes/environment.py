@@ -17,10 +17,6 @@ class KubernetesEnvironment(Environment):
         return self.get_param("namespace")
 
     @property
-    def service_type(self):
-        return self.get_param("service_type")
-
-    @property
     def storage_class(self):
         return self.get_param("storage_class")
 

@@ -1,5 +1,6 @@
 from . import algorithm
 from . import method_stanza_name
+from dltk.core import is_truthy
 
 
 class Method(object):

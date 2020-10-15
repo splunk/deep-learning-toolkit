@@ -4,7 +4,7 @@
   <view name="algorithms" />
   <view name="models" />
   <collection label="Examples">
-      <view name="dashboards" />
+    <view source="unclassified" match="example"/>
   </collection>
   <collection label="Configuration">
     <view name="environments" />

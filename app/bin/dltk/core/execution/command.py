@@ -395,7 +395,7 @@ class ExecutionCommand(object):
                 ):
                     if result.error:
                         self.die(result.error)
-                    if result.events:
+                    if isinstance(result.events, list):
                         self.execution.logger.warning("got %s results" % len(result.events))
                         field_names = set()
                         for r in result.events:
@@ -406,6 +406,10 @@ class ExecutionCommand(object):
                         for r in result.events:
                             writer.writerow(r)
                         output_body = out.getvalue()
+                    elif isinstance(result.events, str):
+                        csv_string = result.events
+                        self.execution.logger.warning("got csv result of %s bytes" % len(csv_string))
+                        output_body = csv_string
                     else:
                         output_body = None
                 finished = final_chunk_from_splunk and result.final

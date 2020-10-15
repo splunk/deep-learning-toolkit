@@ -47,9 +47,17 @@ class BaseExecution(KubernetesExecution):
             }
         )
         response = urllib.request.urlopen(request)
+        returns = response.read()
 
-        self.logger.warning("sent %s bytes" % len(buffer))
+        result = json.loads(returns.decode())
+        if not "status" in result:
+            return execution.ExecutionResult(error="No status found in container results")
+        status = result['status']
+        if status == "error":
+            return execution.ExecutionResult(error=result['message'])
+
+        self.logger.warning("returns %s" % str(returns))
 
         return execution.ExecutionResult(
-            events=[],
+            events=result['results'],
         )

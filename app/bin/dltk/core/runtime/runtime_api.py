@@ -12,6 +12,8 @@ __all__ = [
 
 
 def exists(splunk, name):
+    if not name:
+        return False
     return name in splunk.confs[conf_name]
 
 

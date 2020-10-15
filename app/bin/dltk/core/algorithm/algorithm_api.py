@@ -44,7 +44,7 @@ def delete(splunk, algorithm_name):
         deleting_deployments = True
     if deleting_deployments:
         raise Exception("Triggered deleting deployments. Try again later.")
-    
+
     for m in method_api.get_all(splunk, a):
         method_api.delete(splunk, algorithm_name, m.name)
 
@@ -56,6 +56,11 @@ def get(splunk, algorithm_name):
         raise Exception("algorithm with name %s doesn't exist" % algorithm_name)
     algorithm_stanza = conf.get(splunk)[algorithm_name]
     runtime_name = algorithm_stanza["runtime"]
+    if not runtime.exists(splunk, runtime_name):
+        raise Exception("algorithm '%s' refers to runtime '%s' which is unknown" % (
+            algorithm_name,
+            runtime_name,
+        ))
     r = runtime.get(splunk, runtime_name)
     algorithm_handler = r.algorithm_handler
     AlgorithmClass = get_class(algorithm_handler)

@@ -21,8 +21,7 @@ RUN wget --quiet https://repo.anaconda.com/archive/Anaconda3-2020.02-Linux-x86_6
     echo "conda activate base" >> ~/.bashrc
 
 # Install basic frameworks
-RUN conda install -n base nb_conda waitress nodejs 
-#datashader tensorflow-gpu pytorch gensim dask-ml 
+RUN conda install -n base nb_conda waitress nodejs datashader tensorflow-gpu pytorch gensim dask-ml 
 
 # Setup jupyter lab extensions
 #RUN conda install -n base -c conda-forge dask-labextension

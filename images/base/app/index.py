@@ -2,6 +2,8 @@
 # This is a MLTK extension for containerized custom deep learning with TensorFlow 2.0, PyTorch
 # Author: Philipp Drieger, Principal Machine Learning Architect, 2018-2020
 # -------------------------------------------------------------------------------
+import sys
+sys.path.insert(0,"/srv/app")
 import os
 import json
 import time
@@ -12,6 +14,7 @@ from datetime import datetime
 from importlib import import_module, reload
 from flask import send_from_directory
 from flask import Flask, jsonify, request, Response
+import traceback
 
 # -------------------------------------------------------------------------------
 # python entry point to run the flask app
@@ -148,7 +151,8 @@ def set_fit():
         app.Model["fit_info"] = app.Model["algo"].fit(app.Model["model"], app.Model["df"], app.Model["meta"])
         print("/fit: " + str(app.Model["fit_info"]) + "")
     except Exception as e:
-        response["message"] += 'unable to fit model. Ended with exception: ' + str(e)
+        response["message"] += 'unable to fit model. Ended with exception: ' + str(traceback.format_exc())
+        #response["message"] += 'unable to fit model. Ended with exception: ' + str(e)
         return json.dumps(response)
 
     # 7. save model if into keyword is present with model_name

@@ -38,7 +38,19 @@ class BaseExecution(KubernetesExecution):
         content = {
             "data": buffer_bytes.decode(),
             "meta": {
+                "options": {
+                    "params": {
+                        "algo": "algo",
+                    }
+                }
+            },
         }
+        for k, v in self.context.params.items():
+            if k == "feature_variables" or k == "target_variables":
+                v = v.split(',')
+                content["meta"][k] = v
+            content["meta"]["options"]["params"][k] = v
+
         request = urllib.request.Request(
             url,
             method="POST",

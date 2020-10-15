@@ -374,7 +374,8 @@ class ExecutionCommand(object):
                     },
                 ):
                     try:
-                        result = self.execution.handle(self.buffer.getvalue(), final_chunk_from_splunk)
+                        self.buffer.seek(0)
+                        result = self.execution.handle(self.buffer, final_chunk_from_splunk)
                         if result is None:
                             result = ExecutionResult()
                     except Exception as e:

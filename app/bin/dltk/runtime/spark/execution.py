@@ -131,6 +131,7 @@ class SparkExecution(KubernetesExecution):
     is_inbound_relay_ready = False
 
     def send_events(self, buffer):
+        buffer=buffer.getvalue()
         if self.input_hdfs_data_path == "via_relay":
             if not self.is_inbound_relay_ready:
                 with opentracing.tracer.start_active_span("wait-for-inbound-relay"):

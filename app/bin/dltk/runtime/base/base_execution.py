@@ -21,9 +21,22 @@ class BaseExecution(KubernetesExecution):
         else:
             raise Exception("unsupported method")
 
+        # include a header and only keep the first len(self.context.fields) values
+        field_count = len(self.context.fields)
+        clean_buffer = io.BytesIO()
+        clean_buffer.write((','.join(self.context.fields) + "\n").encode())
+        while buffer.readable():
+            line = buffer.readline()
+            if not line:
+                break
+            clean_buffer.write(line[:-(field_count + 1)] + b"\n")
+        buffer_bytes = clean_buffer.getvalue()
+
+        self.logger.warning("sending %s bytes" % len(buffer_bytes))
+
         content = {
-            "data": ','.join(self.context.fields) + "\n" + buffer.decode(),
-            "meta": {},
+            "data": buffer_bytes.decode(),
+            "meta": {
         }
         request = urllib.request.Request(
             url,

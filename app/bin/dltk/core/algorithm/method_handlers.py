@@ -19,6 +19,7 @@ class AlgorithmMethodsHandler(BaseRestHandler):
                 "name": m.name,
                 "command_type": m.command_type,
                 "max_buffer_size": m.max_buffer_size,
+                "support_preop": m.support_preop,
             })
         self.send_entries(results)
 

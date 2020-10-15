@@ -36,7 +36,7 @@ class Method(object):
 
     @property
     def support_preop(self):
-        return True
+        return is_truthy(self.get_param("support_preop"))
 
     @property
     def max_buffer_size(self):

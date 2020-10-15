@@ -25,12 +25,17 @@ command_type = [streaming|stateful|events|reporting]
 * You may also have a look at https://conf.splunk.com/files/2017/slides/extending-spl-with-custom-search-commands-and-the-splunk-sdk-for-python.pdf
 * Defaults to 'reporting'
 
+support_preop = <boolean>
+* Whether or not to support 'streaming' pre-op for 'reporting' commands
+* Defaults to false.
+
 [<algorithm_name>:<method_name>]
 
 max_buffer_size = [auto|all|<number_of_bytes>]
-* See 'max_buffer_size' on the algorithm stanza.
-* Defaults to what is set on the algorithm stanza.
+* Defaults to what is set to 'max_buffer_size' the algorithm stanza.
 
 command_type = [streaming|stateful|events|reporting]
-* See 'command_type' on the algorithm stanza.
-* Defaults to what is set on the algorithm stanza.
+* Defaults to what is set to 'command_type' the algorithm stanza.
+
+support_preop = <boolean>
+* Defaults to what is set to 'support_preop' the algorithm stanza.

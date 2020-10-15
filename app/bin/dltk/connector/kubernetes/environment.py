@@ -84,6 +84,13 @@ class KubernetesEnvironment(Environment):
             return None
 
     @property
+    def node_port_url(self):
+        if "node_port_url" in self._stanza:
+            return self._stanza["node_port_url"]
+        else:
+            return None
+
+    @property
     def ingress_class(self):
         if "ingress_class" in self._stanza:
             return self._stanza["ingress_class"]

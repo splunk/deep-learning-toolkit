@@ -1,4 +1,5 @@
 import urllib
+from urllib.parse import urlparse
 import http
 from dltk.core import deployment
 from dltk.core import execution
@@ -14,7 +15,7 @@ __all__ = ["BaseDeployment"]
 class BaseDeployment(KubernetesDeployment):
 
     def __init__(self, splunk, stanza):
-        super().__init__(splunk, stanza, "9")
+        super().__init__(splunk, stanza, "11")
 
     def deploy(self):
         super().deploy()
@@ -28,21 +29,20 @@ class BaseDeployment(KubernetesDeployment):
             self.wait_for_deployment(d)
 
             if self.environment.ingress_mode == "node-port":
-                # service = self.deploy_base_service(
-                #    service_type="NodePort"
-                # )
-                # self.wait_for_service(service)
-                #hostname = self.get_service_hostname(service)
-                #nodeport_jupyter = self.get_service_nodeport(service, "jupyter")
-                #self.editor_url = "http://%s:%s" % (hostname, nodeport_jupyter)
-                # self.runtime_status = {
-                #    "api": "http://%s:%s" % (hostname, self.get_service_nodeport(service, "api")),
-                #    # "sparkui": "http://%s:%s" % (hostname, self.get_service_nodeport(service, "sparkui")),
-                #    "tensorboard": "http://%s:%s" % (hostname, self.get_service_nodeport(service, "tensorboard")),
-                # }
-                pass
+                service = self.deploy_base_service(
+                    service_type="NodePort"
+                )
+                self.wait_for_service(service)
+                jupyter_node_port = self.get_service_nodeport(service, "jupyter")
+                api_node_port = self.get_service_nodeport(service, "api")
+                node_port_url = self.environment.node_port_url
+                self.logger.warning("%s" % node_port_url)
+                o = urlparse(node_port_url)
+                api_url = "%s://%s:%s" % (o.scheme, o.hostname, api_node_port)
+                self.editor_url = "%s://%s:%s" % (o.scheme, o.hostname, jupyter_node_port)
 
             elif self.environment.ingress_mode == "ingress":
+
                 # create service
                 service = self.deploy_base_service()
 
@@ -64,23 +64,16 @@ class BaseDeployment(KubernetesDeployment):
                     ingress_labels={"component": "api"},
                     rewrite_path=True,
                 )
-                self.api_url = self.get_ingress_url("api")
-                self.runtime_status = {
-                    "api_url": self.api_url,
-                }
-
-                self.sync_source_code(self.api_url)
-                self.sync_deployment_code(self.api_url)
+                api_url = self.get_ingress_url("api")
 
             else:
                 raise UserFriendlyError("Unsupported ingress mode %s. Only node-port is allowed." % self.environment.ingress_mode)
 
-            # self.runtime_status = {
-            #     "hostname": hostname,
-            # }
-            # self.editor_url = "http://%s:80" % hostname
-            # self.sync_source_code(service)
-            # self.sync_deployment_code(service)
+            self.runtime_status = {
+                "api_url": api_url,
+            }
+            self.sync_source_code(api_url)
+            self.sync_deployment_code(api_url)
 
     def deploy_base_volume_claim(self):
         return self.deploy_volume_claim(
@@ -166,10 +159,11 @@ class BaseDeployment(KubernetesDeployment):
         )
 
     def sync_source_code(self, url):
-        url = url + "/notebook"
+        url = urllib.parse.urljoin(url, "notebook")
+        self.logger.warning("notebookurl: %s" % url)
         try:
             download_request = urllib.request.Request(url, method="GET")
-            download_response = urllib.request.urlopen(download_request)
+            download_response = urllib.request.urlopen(download_request, timeout=7)
             notebook_version = int(download_response.getheader("X-Notebook-Version"))
             if notebook_version is None:
                 raise Exception("Did not receive notebook version")
@@ -204,10 +198,10 @@ class BaseDeployment(KubernetesDeployment):
             logging.info("Sent source code (version %s)" % self.algorithm.source_code_version)
 
     def sync_deployment_code(self, url):
-        url = url + "/code"
+        url = urllib.parse.urljoin(url, "code")
         try:
             download_request = urllib.request.Request(url, method="GET")
-            download_response = urllib.request.urlopen(download_request)
+            download_response = urllib.request.urlopen(download_request, timeout=7)
             version = int(download_response.getheader("X-Code-Version"))
             if version is None:
                 raise Exception("Did not receive code version")

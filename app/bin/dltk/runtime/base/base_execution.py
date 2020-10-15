@@ -3,6 +3,7 @@ from dltk.connector.kubernetes import KubernetesExecution
 import urllib
 import http
 import json
+import io
 
 __all__ = ["BaseExecution"]
 

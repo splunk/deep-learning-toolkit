@@ -16,7 +16,7 @@ WORKDIR $NOTEBOOK_PATH
 
 # dltk packages for algos
 ENV DLTK_LIB_DIR $DLTK_DIR/libs
-COPY lib/ $DLTK_LIB_DIR/
+#COPY lib/ $DLTK_LIB_DIR/
 RUN mkdir -p $DLTK_LIB_DIR
 
 # configure pyspark

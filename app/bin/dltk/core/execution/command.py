@@ -108,7 +108,9 @@ class ExecutionCommand(object):
                 "trace_context",
                 "search_id",
                 "trace_level",
-            ])
+            ],
+            ignore_unknown=True,
+        )
         #raise Exception("command_options: %s" % command_options)
 
         if "search_id" in command_options:
@@ -290,6 +292,7 @@ class ExecutionCommand(object):
             method=method,
             message_logger=self.messages_logger,
             fields=self.fields,
+            params=command_options
         )
 
         if not is_temp_search:

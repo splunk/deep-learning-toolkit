@@ -27,15 +27,15 @@ _options_re = re.compile(r"""
     """, re.VERBOSE | re.UNICODE)
 
 
-def parse_options(args, valid_options):
+def parse_options(args, valid_options, ignore_unknown=False):
     valid_options = set(valid_options)
     options = {}
     for a in args:
-        i=a.find("=")
-        if i>=0:
-            name=a[:i]
-            value=a[i+1:]
-            if name not in valid_options:
+        i = a.find("=")
+        if i >= 0:
+            name = a[:i]
+            value = a[i + 1:]
+            if name not in valid_options and not ignore_unknown:
                 raise ValueError(
                     'Unrecognized command option: {}={}'.format(name, json_encode_string(value)))
             options[name] = unquote(value)

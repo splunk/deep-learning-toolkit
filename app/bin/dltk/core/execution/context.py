@@ -10,6 +10,7 @@ class ExecutionContext(object):
     method = None
     message_logger = None
     fields = None
+    params = None
 
     def __init__(
         self,
@@ -21,6 +22,7 @@ class ExecutionContext(object):
         method,
         message_logger,
         fields,
+        params,
     ):
         self.is_preop = is_preop
         self.is_searchpeer = is_searchpeer
@@ -30,3 +32,4 @@ class ExecutionContext(object):
         self.method = method
         self.message_logger = message_logger
         self.fields = fields
+        self.params = params

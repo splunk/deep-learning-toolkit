@@ -1,3 +1,8 @@
+[default]
+handler = <string>
+environment_handler = <string>
+environment_params = <string>
+
 [kubernetes]
 auth_mode = [cert-key|aws-iam|user-token|in-cluster]
 ingress_mode = [ingress|load-balancer|node-port|route]

@@ -1,4 +1,10 @@
+
+
+
 [<environment_name>]
+
+connector =
+
 
 #######################################################################
 # Kubernetes connector settings

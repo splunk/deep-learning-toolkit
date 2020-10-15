@@ -3,8 +3,9 @@ from dltk.test import *
 
 __all__ = [
     "CreateEnvironmentTest",
-    "ListEnvironmentTestCase",
     "DeleteEnvironmentTest",
+    "ListEnvironmentTestCase",
+    "EnvironmentParamsTest",
 ]
 
 
@@ -54,6 +55,8 @@ class ListEnvironmentTestCase(unittest.TestCase):
             cls.__name__,
         )
 
+
+@skip_if_required()
 class DeleteEnvironmentTest(unittest.TestCase):
 
     def runTest(self):
@@ -86,6 +89,87 @@ class DeleteEnvironmentTest(unittest.TestCase):
             self.__class__.__name__,
             environments,
         ))
+
+    @classmethod
+    def tearDownClass(cls):
+        dltk_environment.delete(
+            cls.__name__,
+            skip_if_not_exists=True,
+        )
+
+
+class EnvironmentParamsTest(unittest.TestCase):
+
+    @classmethod
+    def setUpClass(cls):
+        dltk_environment.create(
+            cls.__name__,
+            "kubernetes",
+            delete_if_already_exists=True,
+        )
+
+    def runTest(self):
+        ingress_mode_param = dltk_environment.get_environment_param(
+            "ingress_mode",
+            connector_name="kubernetes"
+        )
+        self.assertIsNotNone(ingress_mode_param)
+        self.assertEqual(ingress_mode_param["name"], "ingress_mode")
+        self.assertEqual(ingress_mode_param["default"], "node-port")
+        self.assertEqual(ingress_mode_param["value"], None)
+
+        aws_region_name_param = dltk_environment.get_environment_param(
+            "aws_region_name",
+            connector_name="kubernetes"
+        )
+        self.assertIsNotNone(ingress_mode_param)
+        self.assertEqual(aws_region_name_param["name"], "aws_region_name")
+        self.assertEqual(aws_region_name_param["default"], None)
+        self.assertEqual(aws_region_name_param["value"], None)
+
+        ingress_mode_param = dltk_environment.get_environment_param(
+            "ingress_mode",
+            environment_name=self.__class__.__name__
+        )
+        self.assertIsNotNone(ingress_mode_param)
+        self.assertEqual(ingress_mode_param["name"], "ingress_mode")
+        self.assertEqual(ingress_mode_param["default"], "node-port")
+        self.assertEqual(ingress_mode_param["value"], None)
+
+        aws_region_name_param = dltk_environment.get_environment_param(
+            "aws_region_name",
+            environment_name=self.__class__.__name__
+        )
+        self.assertIsNotNone(ingress_mode_param)
+        self.assertEqual(aws_region_name_param["name"], "aws_region_name")
+        self.assertEqual(aws_region_name_param["default"], None)
+        self.assertEqual(aws_region_name_param["value"], None)
+
+        dltk_environment.set_environment_params(
+            params={
+                "ingress_mode": "1",
+                "aws_region_name": "2",
+            },
+            environment_name=self.__class__.__name__
+        )
+
+        ingress_mode_param = dltk_environment.get_environment_param(
+            "ingress_mode",
+            environment_name=self.__class__.__name__
+        )
+        self.assertIsNotNone(ingress_mode_param)
+        self.assertEqual(ingress_mode_param["name"], "ingress_mode")
+        self.assertEqual(ingress_mode_param["default"], "node-port")
+        self.assertEqual(ingress_mode_param["value"], "1")
+
+        aws_region_name_param = dltk_environment.get_environment_param(
+            "aws_region_name",
+            environment_name=self.__class__.__name__
+        )
+        self.assertIsNotNone(ingress_mode_param)
+        self.assertEqual(aws_region_name_param["name"], "aws_region_name")
+        self.assertEqual(aws_region_name_param["default"], None)
+        self.assertEqual(aws_region_name_param["value"], "2")
 
     @classmethod
     def tearDownClass(cls):

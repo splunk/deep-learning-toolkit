@@ -49,7 +49,6 @@ class EnvironmentParamsHandler(BaseRestHandler):
     def handle_GET(self):
         environment_name = self.get_param("environment")
         connector_name = self.get_param("connector")
-        include_runtimes = is_truthy(self.get_param("include_runtimes"))
         if environment_name:
             e = environment_api.get(self.splunk, environment_name)
             c = e.connector
@@ -68,15 +67,21 @@ class EnvironmentParamsHandler(BaseRestHandler):
             "value": get_value(name),
             "type": "text",  # "picker" "text",
             "mandatory": False,
-        } for name in ["aaaa", "bbbb"]])  # TODO: c.environment_params
-        if include_runtimes:
-            for r in runtime.get_all(self.splunk):  # TODO: filter by c.name
-                params.extend([{
-                    "runtime": r.name,
-                    "name": name,
-                    "default": r.get_param(name),
-                    "value": "",
-                    "type": "text",  # "picker" "text",
-                    "mandatory": False,
-                } for name in ["cccc", "dddd"]])  # TODO: c.runtime_param_names
+        } for name in c.environment_param_names])
         self.send_entries(params)
+
+    def handle_PUT(self):
+        environment_name = self.get_param("environment")
+        if not environment_name:
+            raise Exception("requires environment")
+        e = environment_api.get(self.splunk, environment_name)
+        changed_value = False
+        for name in e.connector.environment_param_names:
+            value = self.get_param(name)
+            if value is not None:
+                e.set_param(name, value)
+                changed_value = True
+        # TODO: trigger_deploying
+        # if changed_value:
+        #    for d in a.deployments:
+        #        d.trigger_deploying()

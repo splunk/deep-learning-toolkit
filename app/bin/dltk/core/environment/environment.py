@@ -52,11 +52,21 @@ class Environment(object):
         else:
             return None
 
-    def get_param(self, name):
+    def get_param(self, name, inherit=True):
         if name in self._stanza.content:
-            return self._stanza.content[name]
-        else:
+            v = self._stanza[name]
+            if v is None:
+                v = ""
+            return v
+        if inherit:
             return self.connector.get_param(name)
+        return None
+
+    def set_param(self, name, value):
+        self._stanza.submit({
+            name: value
+        })
+        self._stanza.refresh()
 
     @property
     def params(self):

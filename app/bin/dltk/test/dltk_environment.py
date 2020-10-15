@@ -46,6 +46,7 @@ def set_up():
 def get_all():
     return dltk_api.call("GET", "environments")
 
+
 def tear_down():
     splunk = splunk_api.connect()
     environment_name, is_temp_env = get_name_and_temp()
@@ -77,3 +78,42 @@ def delete(name, skip_if_not_exists=False):
     dltk_api.call("DELETE", "environments", {
         "name": name,
     }, return_entries=False)
+
+
+def get_environment_params(connector_name=None, environment_name=None):
+    options = {}
+    if connector_name:
+        options["connector"] = connector_name
+    if environment_name:
+        options["environment"] = environment_name
+    return dltk_api.call(
+        "GET",
+        "environment_params",
+        options
+    )
+
+
+def get_environment_param(param_name, connector_name=None, environment_name=None):
+    params = get_environment_params(
+        connector_name=connector_name,
+        environment_name=environment_name
+    )
+    for p in params:
+        if p["name"] == param_name:
+            return p
+    return None
+
+
+def set_environment_params(params, connector_name=None, environment_name=None):
+    dltk_api.call(
+        "PUT",
+        "environment_params",
+        {
+            **{
+                "connector": connector_name,
+                "environment": environment_name,
+            },
+            **params,
+        },
+        return_entries=False,
+    )

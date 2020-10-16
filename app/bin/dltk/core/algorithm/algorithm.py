@@ -42,6 +42,14 @@ class Algorithm(object):
             category = ""
         return category
 
+    @category.setter
+    def category(self, category):
+        if self.category != category:
+            self._stanza.submit({
+                "category": category
+            })
+            self._stanza.refresh()
+
     @property
     def description(self):
         description = self._stanza["description"]

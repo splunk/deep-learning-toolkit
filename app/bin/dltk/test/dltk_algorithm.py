@@ -21,10 +21,11 @@ def list_algorithms():
 def get_algorithm_params(name):
     return dltk_api.call(
         "GET",
-        "algorithm_params",{
+        "algorithm_params", {
             "algorithm": name,
         }
     )
+
 
 def get_algorithm_param(algorithm_name, param_name):
     params = get_algorithm_params(algorithm_name)
@@ -32,6 +33,7 @@ def get_algorithm_param(algorithm_name, param_name):
         if p["name"] == param_name:
             return p
     return None
+
 
 def set_algorithm_params(algorithm_name, params):
     dltk_api.call(
@@ -45,6 +47,7 @@ def set_algorithm_params(algorithm_name, params):
         },
         return_entries=False,
     )
+
 
 def get_algorithm(name):
     algorithms = list_algorithms()
@@ -88,7 +91,7 @@ def delete(name, skip_if_not_exists=False):
         stanza_name = stanza.name
         i = stanza_name.find(":")
         if i >= 0:
-            if name[:i] == name:
+            if stanza_name[:i] == name:
                 algorithms_conf.delete(stanza_name)
 
 
@@ -98,6 +101,29 @@ def list_methods(algorithm_name):
         "algorithm_methods",
         data={
             "algorithm": algorithm_name
+        }
+    )
+
+
+def get_algorithm_details(algorithm_name):
+    return dltk_api.call(
+        "GET",
+        "algorithm_details",
+        data={
+            "algorithm": algorithm_name
+        }
+    )[0]
+
+
+def set_algorithm_details(algorithm_name, **details):
+    return dltk_api.call(
+        "PUT",
+        "algorithm_details",
+        data={
+            **{
+                "algorithm": algorithm_name
+            },
+            **details
         }
     )
 

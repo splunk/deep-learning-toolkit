@@ -29,6 +29,20 @@ support_preop = <boolean>
 * Whether or not to support 'streaming' pre-op for 'reporting' commands
 * Defaults to false.
 
+source_code = <string>
+* Contains the source code of the algorithm
+* As example this can be a ipynb jupyter notebook json code or python code or any other source code
+* Optional.
+
+description = <string>
+* Description of the algorithm which also appears in the algorithms overview UI
+* Optional.
+
+runtime = <string>
+* Defines the runtime which is used for the algorithm to execute in.
+* Required.
+
+
 [<algorithm_name>:<method_name>]
 
 max_buffer_size = [auto|all|<number_of_bytes>]
@@ -39,3 +53,4 @@ command_type = [streaming|stateful|events|reporting]
 
 support_preop = <boolean>
 * Defaults to what is set to 'support_preop' the algorithm stanza.
+

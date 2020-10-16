@@ -64,3 +64,18 @@ image_pull_policy = <string>
 image_pull_secret = <string>
 * See dltk_connectors.conf.spec for details.
 * Defaults what set set 'image_pull_secret' in the 'kubernetes' connector.
+
+client_cert = <string>
+* Defaults what set set 'client_cert' in the 'kubernetes' connector.
+
+client_key = <string>
+* Defaults what set set 'client_key' in the 'kubernetes' connector.
+
+cluster_ca = <string>
+* Defaults what set set 'cluster_ca' in the 'kubernetes' connector.
+
+user_token = <string>
+* Defaults what set set 'user_token' in the 'kubernetes' connector.
+
+cluster_url = <string>
+* Defaults what set set 'cluster_url' in the 'kubernetes' connector.

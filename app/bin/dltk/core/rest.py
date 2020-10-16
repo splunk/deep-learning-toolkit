@@ -39,6 +39,8 @@ class BaseRestHandler(SplunkBaseRestHandler):  # noqa
     def send_entries(self, entries):
         if entries is None:
             entries = []
+        if isinstance(entries, dict):
+            entries = [entries]
         self.send_json_response({
             "entry": [{
                 "content": e
@@ -85,25 +87,25 @@ class BaseRestHandler(SplunkBaseRestHandler):  # noqa
         self.send_entries(results)
 
     def handle_GET(self):
-        handle_request(self.get)
+        self.handle_request(self.get)
 
     def get(self):
         pass
 
     def handle_PUT(self):
-        handle_request(self.put)
+        self.handle_request(self.put)
 
     def put(self):
         pass
 
     def handle_POST(self):
-        handle_request(self.post)
+        self.handle_request(self.post)
 
     def post(self):
         pass
 
     def handle_DELETE(self):
-        handle_request(self.delete)
+        self.handle_request(self.delete)
 
     def delete(self):
         pass

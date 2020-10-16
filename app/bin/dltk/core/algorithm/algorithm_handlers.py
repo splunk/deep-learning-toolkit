@@ -10,7 +10,11 @@ from dltk.core import deployment
 from dltk.core import runtime
 
 
-__all__ = ["AlgorithmsHandler", "AlgorithmParamsHandler"]
+__all__ = [
+    "AlgorithmsHandler",
+    "AlgorithmParamsHandler",
+    "AlgorithmDetailsHandler"
+]
 
 
 class AlgorithmParamsHandler(BaseRestHandler):
@@ -126,3 +130,27 @@ class AlgorithmsHandler(BaseRestHandler):
         if not algorithm_name:
             raise Exception("missing name")
         algorithm_api.delete(self.splunk, algorithm_name)
+
+
+class AlgorithmDetailsHandler(BaseRestHandler):
+    def get(self):
+        algorithm_name = self.get_param("algorithm")
+        if not algorithm_name:
+            raise Exception("missing algorithm")
+        a = algorithm_api.get(self.splunk, algorithm_name)
+        return {
+            "description": a.description,
+            "category": a.category,
+        }
+
+    def put(self):
+        algorithm_name = self.get_param("algorithm")
+        if not algorithm_name:
+            raise Exception("missing algorithm")
+        a = algorithm_api.get(self.splunk, algorithm_name)
+        description = self.get_param("description")
+        if description != None:
+            a.description = description
+        category = self.get_param("category")
+        if category != None:
+            a.category = category

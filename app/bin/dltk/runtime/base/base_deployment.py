@@ -108,6 +108,10 @@ class BaseDeployment(KubernetesDeployment):
         )
 
     def deploy_base_deployment(self, models_volume_claim):
+        juypter_base_url = ""
+        if self.environment.ingress_mode == "ingress":
+            juypter_base_url = self.get_ingress_path("editor")
+
         return self.deploy_deployment(
             self.get_param("image"),
             cpu_count=int(self.get_param("cpu_count")),
@@ -137,7 +141,7 @@ class BaseDeployment(KubernetesDeployment):
             env=[
                 kubernetes_client.V1EnvVar(
                     name="JUPYTER_BASE_URL_PATH",
-                    value=self.get_ingress_path("editor"),
+                    value=juypter_base_url,
                 )
             ],
             volumes=[

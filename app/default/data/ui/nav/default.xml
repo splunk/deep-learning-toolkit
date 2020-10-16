@@ -4,7 +4,46 @@
   <view name="algorithms" />
   <view name="models" />
   <collection label="Examples">
-    <view source="unclassified" match="example"/>
+    <collection label="Classifier">
+      <view name="example_classifier_tensorflow_neural_network_classifier" />
+      <view name="example_classifier_pytorch_logistic_regression_classifier" />
+      <view name="example_classifier_pytorch_multiclass_neural_network_classifier" />
+      <view name="example_classifier_neural_network_classifier_dga" />
+      <view name="example_classifier_spark_gradient_boosting_classifier_dga" />
+      <view name="example_classifier_xgboost_classifier_shap" />
+    </collection>
+    <collection label="Regression">
+      <view name="example_regression_tensorflow_linear_regression" />
+      <view name="example_regression_tensorflow_dnn_regressor" />
+      <view name="example_regression_xgboost_regression" />
+    </collection>
+    <collection label="Forecasting">
+      <view name="example_forecasting_tensorflow_cnn_forecast" />
+      <view name="example_forecasting_tensorflow_lstm_forecast" />
+      <view name="example_forecasting_prophet" />
+    </collection>
+    <collection label="Clustering">
+      <view name="example_clustering_tensorflow_autoencoder" />
+      <view name="example_clustering_dask_kmeans" />
+      <view name="example_clustering_umap_clustering" />
+    </collection>
+    <collection label="NLP">
+      <view name="example_nlp_spacy_named_entity_recognition_extraction" />
+      <view name="example_nlp_spacy_named_entity_recognition_extraction_ginza" />
+    </collection>
+    <collection label="Graphs">
+      <view name="example_graphs_networkx_centrality_algorithms" />
+      <view name="example_graphs_rapids_louvain" />
+    </collection>
+    <collection label="Data Mining">
+      <view name="example_datamining_spark_frequent_itemsets_shopping_analysis" />
+      <view name="example_datamining_spark_collaborative_filtering_recommendations" />
+      <view name="example_datamining_rapids_umap_dga" />      
+    </collection>
+    <collection label="Basic">
+      <view name="example_basic_pandas_correlation_matrix_plot" />
+      <view name="example_basic_spark_pi" />
+    </collection>
   </collection>
   <collection label="Configuration">
     <view name="environments" />

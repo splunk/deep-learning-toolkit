@@ -2,7 +2,11 @@
 
 Deep Learning Toolkit for Splunk (DLTK) is a Splunk App that allows users to better deploy, observe and scale advanced data science projects with Splunk. In a cloud-native way, DLTK lets you elastically and dynamically deploy models to CPU and GPU based container environments such as Docker, Kubernetes or OpenShift to run sophisticated algorithms in runtimes like in Spark, TensorFlow, PyTorch, Rapids and Dask.
 
-This repository is used to build the DLTK. If you are looking for documentation on how to use it, please see the [Getting Started Documentation](docs/README.md).
+This repository is used to build DLTK. If you are looking for documentation, please see the following:
+
+- [Users & Data Scientists Guide](docs/user/README.md)
+- [Administrator Guide](docs/admin/README.md)
+- [Developer Guide](docs/developer/README.md)
 
 ## Community Supported
 

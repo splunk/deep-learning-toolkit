@@ -85,11 +85,16 @@ define([
                                 await rest.createRestEndpoint().postAsync(`deployments`, deployment);
                             }
                             if (p){
+                                var algoparams = {
+                                    algorithm: _.escape(_(algorithm["name"]).t())
+                                };
                                 for (var key in p){
-                                    if (p[key] && typeof(p[key])!='function')
-                                        algorithm[key] = _.escape(_(p[key]).t());
+                                    
+                                    if (p[key] && typeof(p[key])!='function'){
+                                        algoparams[key] = _.escape(_(p[key]).t());
+                                    }
                                 }
-                                await rest.createRestEndpoint().putAsync(`algorithm_params`, algorithm);
+                                await rest.createRestEndpoint().putAsync(`algorithm_params`, algoparams);
                             }
                         }
                     },

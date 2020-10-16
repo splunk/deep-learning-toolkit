@@ -2,6 +2,6 @@
 
 The documentation is divided into the following guides:
 
-- [Users & Data Scientists Guide](user/README.md)
+- [User Guide](user/README.md)
 - [Administrator Guide](admin/README.md)
 - [Developer Guide](developer/README.md)

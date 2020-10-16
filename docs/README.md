@@ -21,4 +21,6 @@ This guide is intended to help new users get up and running with DLTK. It is div
 - DLTK Developers
   - [Building from Sources](examples.md)
   - [Running Tests](test.md)
+  - [Contributing Guidelines](contributing.md)
   - [Creating Tests](test.md)
+  

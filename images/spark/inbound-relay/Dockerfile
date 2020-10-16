@@ -9,7 +9,7 @@ COPY inbound-relay/requirements.txt ${RELAY_DIR}/requirements.txt
 RUN pip3 install --no-cache-dir -r ${RELAY_DIR}/requirements.txt
 
 # copy libs
-COPY lib/ $RELAY_DIR/
+#COPY lib/ $RELAY_DIR/
 
 # copy relay sources
 COPY inbound-relay/*.py ${RELAY_DIR}/

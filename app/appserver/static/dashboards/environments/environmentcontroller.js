@@ -56,7 +56,7 @@ define([
                     },
                     savehandler: async function (modalvalues, el) {
                         var environment = {};
-                        let r = modalvalues['base'], p = modalvalues['runtime'];
+                        let r = modalvalues['base'], p = modalvalues['connector'];
                         if (r){
                             for (var key in r){
                                 if (r[key] && typeof(r[key])!='function'){

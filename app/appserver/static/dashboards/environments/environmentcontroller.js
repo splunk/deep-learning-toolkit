@@ -54,14 +54,24 @@ define([
                         $Modal.children.createDialog.changedFields = {};
                         return true;
                     },
-                    savehandler: async function (r, el) {
+                    savehandler: async function (modalvalues, el) {
                         var environment = {};
-                        for (var key in r){
-                            if (r[key] && typeof(r[key])!='function'){
-                                environment[key] = _.escape(_(r[key]).t());
+                        let r = modalvalues['base'], p = modalvalues['runtime'];
+                        if (r){
+                            for (var key in r){
+                                if (r[key] && typeof(r[key])!='function'){
+                                    environment[key] = _.escape(_(r[key]).t());
+                                }
+                            }
+                            await rest.createRestEndpoint().postAsync(`environments`, environment);
+                            if (p){
+                                for (var key in p){
+                                    if (p[key] && typeof(p[key])!='function')
+                                        environment[key] = _.escape(_(p[key]).t());
+                                }
+                                await rest.createRestEndpoint().putAsync(`environment_params`, environment);
                             }
                         }
-                        await rest.createRestEndpoint().postAsync(`environments`, environment);
                     },
                     savedhandler: async function (el, m) {
                         $Modal.children.createDialog.changedFields = {};

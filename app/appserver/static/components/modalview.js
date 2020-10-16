@@ -130,7 +130,8 @@ define([
             },
             initialize: function(options) {
                 Modal.prototype.initialize.apply(this, arguments), this.action = this.options.action;
-                this.options = _.extend({}, this.defaults);
+                this.options.children = [];
+                this.options = _.extend({}, this.defaults, this.options);
                 this.options.flashMessages = new FlashMessagesView({ model: {}});
                 this.options.flashMessages.activate();
                 this.options.infoMessages = new FlashMessagesView({ model: {}});

@@ -2,21 +2,13 @@ define([
     'underscore',
     'jquery',
     './modalview',
-    'models/Base',
     'splunkjs/mvc',
     './parametereditview',
     'views/datapreview/shared/Tab',
    './parametertabmodel',
     'css!./modalview.css'
     ], 
-    function(_, $, Modal, BaseModel, mvc, ParameterEditView, Tab, TabModel) {
-        var FieldModel = BaseModel.extend({
-            validation: {
-                value: function(value, attr, computedState) {
-                    if (_.isEmpty(value)) return _("Please enter a value.").t()
-                }
-            }
-        }); 
+    function(_, $, Modal, mvc, ParameterEditView, Tab, TabModel) {
         return Modal.extend({
             className: Modal.CLASS_NAME,
             defaults : {

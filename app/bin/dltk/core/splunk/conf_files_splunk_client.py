@@ -75,10 +75,9 @@ class ConfigurationFile(object):
 
     def __getitem__(self, stanza_name):
         if not self.__contains__(stanza_name):
-            raise KeyError("stanza '%s' not found in '%s' (sections: %s)" % (
+            raise KeyError("stanza '%s' not found in '%s'" % (
                 stanza_name,
                 self._name,
-                self._local_parser.sections()
             ))
         return ConfigurationStanza(
             self,
@@ -90,14 +89,16 @@ class ConfigurationFile(object):
     def __contains__(self, stanza_name):
         if self._default_parser.has_section(stanza_name):
             return True
-        if self._local_parser.has_section(stanza_name):
-            return True
+        if self._local_parser:
+            if self._local_parser.has_section(stanza_name):
+                return True
         return False
 
     def __iter__(self):
         names = set()
-        for n in self._local_parser.sections():
-            names.add(n)
+        if self._local_parser:
+            for n in self._local_parser.sections():
+                names.add(n)
         for n in self._default_parser.sections():
             names.add(n)
         for n in names:

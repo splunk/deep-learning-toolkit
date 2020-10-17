@@ -3,6 +3,14 @@
 
 [<algorithm_name>]
 
+runtime = <string>
+* Name of the DLTK runtime which is used for the algorithm to execute in.
+* Required.
+
+description = <string>
+* Description of the algorithm which also appears in the algorithms overview UI
+* Optional.
+
 category = <string>
 * Algorithm category name. For example 'Clustering', 'Classifier', 'Regressor', ...
 * Optional.
@@ -34,13 +42,8 @@ source_code = <string>
 * As example this can be a ipynb jupyter notebook json code or python code or any other source code
 * Optional.
 
-description = <string>
-* Description of the algorithm which also appears in the algorithms overview UI
+deployment_code = <string>
 * Optional.
-
-runtime = <string>
-* Defines the runtime which is used for the algorithm to execute in.
-* Required.
 
 
 [<algorithm_name>:<method_name>]

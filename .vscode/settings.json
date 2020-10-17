@@ -42,4 +42,31 @@
         "**/bin/yaml": true,
         "**/bin/yarl": true,
     },
+    "cSpell.words": [
+        "dask",
+        "dltk",
+        "kubernetes",
+        "noqa",
+        "runtimes",
+        "splunk's",
+        "splunkbase",
+        "splunkers"
+    ],
+    "cSpell.ignoreWords": [
+        "ainslie",
+        "ainslie malik",
+        "andreas",
+        "andreas greeske",
+        "anthony",
+        "anthony tellez",
+        "drieger",
+        "fujara",
+        "greeske",
+        "malik",
+        "philipp",
+        "philipp drieger",
+        "robert",
+        "robert fujara",
+        "tellez"
+    ],
 }

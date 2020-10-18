@@ -45,6 +45,7 @@
     "cSpell.words": [
         "dask",
         "dltk",
+        "entrypoint",
         "kubernetes",
         "noqa",
         "preop",
@@ -52,7 +53,8 @@
         "splunk's",
         "splunkbase",
         "splunkers",
-        "splunklib"
+        "splunklib",
+        "symlinking"
     ],
     "cSpell.ignoreWords": [
         "ainslie",
@@ -61,6 +63,7 @@
         "andreas greeske",
         "anthony",
         "anthony tellez",
+        "changeme",
         "drieger",
         "fujara",
         "greeske",

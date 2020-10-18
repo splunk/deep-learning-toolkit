@@ -1,10 +1,11 @@
 # Administrator Guide
 
-The Administrator Guide is intended for Splunk administrators and anyone who is responsible for setting up and configuring Deep Learning Toolkit for Splunk and algorithm execution environments.
+This guide is intended for Splunk administrators and anyone who is responsible for setting up and configuring the Deep Learning Toolkit for Splunk and algorithm execution environments.
 
 It is divided into the following sections:
 
 - [Installing DLTK](install.md)
+- [Configure Users and Roles](access_control.md)
 - Connecting to Environments
   - [Kubernetes](environment/kubernetes.md)
 - Configuring Runtimes

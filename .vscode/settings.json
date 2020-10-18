@@ -47,10 +47,12 @@
         "dltk",
         "kubernetes",
         "noqa",
+        "preop",
         "runtimes",
         "splunk's",
         "splunkbase",
-        "splunkers"
+        "splunkers",
+        "splunklib"
     ],
     "cSpell.ignoreWords": [
         "ainslie",

@@ -79,7 +79,7 @@ class ExecutionCommand(object):
 
     def reset_buffer(self):
         # TODO: set initial size depending on max_buffer_size
-        #       but make size it is never exeeded.
+        #       but make size it is never exceeded.
         self.buffer_size = 0
         self.buffer = io.BytesIO()
 
@@ -368,6 +368,8 @@ class ExecutionCommand(object):
                 elif self.buffer_size > self.max_buffer_size:
                     self.execution.logger.warning("max buffer size exceeded")
                     call_deployment = True
+                else:
+                    call_deployment = False
 
             if call_deployment:
                 with self.tracer.start_active_span(

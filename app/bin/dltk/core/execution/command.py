@@ -389,7 +389,7 @@ class ExecutionCommand(object):
                     except Exception as e:
                         self.execution.logger.warning(traceback.format_exc())
                         result = ExecutionResult(
-                            error="Unexpected error calling deployment handler: %s" % (
+                            error="Error handling chunk: %s" % (
                                 ', '.join(traceback.format_exception_only(type(e), e))
                             ),
                         )

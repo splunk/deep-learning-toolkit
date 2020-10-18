@@ -47,6 +47,7 @@
         "dltk",
         "entrypoint",
         "kubernetes",
+        "mltk",
         "noqa",
         "preop",
         "runtimes",
@@ -65,13 +66,18 @@
         "anthony tellez",
         "changeme",
         "drieger",
+        "endings",
         "fujara",
         "greeske",
+        "line",
         "malik",
         "philipp",
         "philipp drieger",
         "robert",
         "robert fujara",
-        "tellez"
+        "tellez",
+        "unmangle",
+        "unmangle windows line endings",
+        "windows"
     ],
 }

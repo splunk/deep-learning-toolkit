@@ -1,2 +1,6 @@
-#[commands/compute]
-#access = read : [ admin ], write : [ admin ]
+[commands/compute]
+access = read : [ * ]
+
+[macros]
+access = read : [ * ]
+export = none

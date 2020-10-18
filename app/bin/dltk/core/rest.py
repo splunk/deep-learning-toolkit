@@ -18,7 +18,8 @@ class BaseRestHandler(SplunkBaseRestHandler):  # noqa
     # splunk client service object create
     def create_service(self):
         s = client.Service(
-            token=self.sessionKey,
+            #token=self.sessionKey,
+            token=self.request["systemAuth"],
             sharing="app",
             app=app_name,
         )

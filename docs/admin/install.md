@@ -8,7 +8,7 @@ Currently, DLTK v4 is still under development and **not yet** released on [Splun
 
 Depending on the deployment type of your Splunk environment (standlone Search Head vs. Search Head cluster) as well as your preferred app deployment method (Deployment Server vs. Upload via Splunk Web vs. Search Head Deployer vs. 3rd Party Deployment Software), you either use a copy of the `app` folder as it is, or you create an app package (using tools like [tar](https://en.wikipedia.org/wiki/Tar_(computing)), [gzip](https://en.wikipedia.org/wiki/Gzip) or [slim]( https://dev.splunk.com/enterprise/docs/releaseapps/packagingtoolkit/pkgtoolkitref/packagingtoolkitcli#slim-package)). To learn more about the methods to deploy Splunk apps in Splunk Enterprise environments, please see the [App Deployment](https://docs.splunk.com/Documentation/Splunk/latest/Admin/Deployappsandadd-ons) documentation.
 
-The following illustrates the installation process on a standalone Splunk Search Head or single-instance Splunk environment (`$SPLUNK_HOME` is `/opt/splunk`):
+The following illustrates the installation process on a standalone Splunk Search Head or single-instance Splunk environment:
 
 ```bash
 git clone https://github.com/splunk/deep-learning-toolkit.git

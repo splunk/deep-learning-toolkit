@@ -90,7 +90,7 @@ class SparkExecution(KubernetesExecution):
     sent_start_signal = False
 
     def handle(self, buffer, finished):
-        if len(buffer) > 0:
+        if buffer:
             self.send_events(buffer)
         if self.context.is_preop:
             return
@@ -131,7 +131,7 @@ class SparkExecution(KubernetesExecution):
     is_inbound_relay_ready = False
 
     def send_events(self, buffer):
-        buffer=buffer.getvalue()
+        buffer = buffer.getvalue()
         if self.input_hdfs_data_path == "via_relay":
             if not self.is_inbound_relay_ready:
                 with opentracing.tracer.start_active_span("wait-for-inbound-relay"):
@@ -195,7 +195,7 @@ class SparkExecution(KubernetesExecution):
             raise Exception("unsupported input_hdfs_data_path: %s" % self.input_hdfs_data_path)
 
     def signal_start(self):
-        self.logger.warning("signal_start ...")
+        self.logger.warning("sending start signal to Spark ...")
         with opentracing.tracer.start_active_span("wait-for-spark-driver"):
             errors = 0
             # https://github.com/opentracing/specification/blob/master/semantic_conventions.md
@@ -220,14 +220,16 @@ class SparkExecution(KubernetesExecution):
                         urllib.request.urlopen(request)
                         break
                     except urllib.error.HTTPError as e:
-                        self.logger.warning("signal_start: HTTPError: %s (%s) (%s)" % (e, e.headers, urllib.parse.urljoin(self.driver_url, "start")))
+                        #self.logger.warning("signal_start: HTTPError: %s (%s) (%s)" % (e, e.headers, urllib.parse.urljoin(self.driver_url, "start")))
                         errors += 1
                         if e.code == 404 or e.code == 503 or e.code == 502 or e.code == 504:
                             if errors > 600:
                                 raise Exception("Timeout signalling input completed")
+                            self.logger.warning("still waiting for Spark (code=%s)" % (e.code))
                         else:
                             raise Exception("Error signalling input completed: %s" % e.code)
                 time.sleep(1)
+        self.logger.warning("successfully sent start signal to Spark")
 
     def signal_stop(self):
         self.logger.warning("signal_stop ...")
@@ -248,7 +250,7 @@ class SparkExecution(KubernetesExecution):
             urllib.request.urlopen(request)
 
     def get_status(self):
-        self.logger.warning("get_status ...")
+        self.logger.info("get_status ...")
         with opentracing.tracer.start_active_span("get-status", tags={
             opentracing.ext.tags.SPAN_KIND: opentracing.ext.tags.SPAN_KIND_RPC_CLIENT,
         }) as scope:
@@ -268,7 +270,7 @@ class SparkExecution(KubernetesExecution):
             if content_type != "application/json":
                 raise Exception("Unsupported content type: %s" % content_type)
             status = json.loads(response.read().decode('utf-8'))
-            logging.warning("status: %s" % status)
+            logging.warning("Spark status is '%s'" % status)
             return status
 
     is_outbound_relay_ready = False

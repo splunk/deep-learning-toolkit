@@ -26,10 +26,10 @@ def connect():
     return splunk
 
 
-def search(query, log_serach_log=False, raise_on_error=True):
+def search(query, log_search_log=False, raise_on_error=True):
     sid = random.randint(300000, 390000)
 
-    logging.info("running search (%s)" % query)
+    logging.info("run search (id=%s): %s" % (sid, query))
 
     def follow(file):
         """ Yield each line from a file as they are written. """
@@ -47,9 +47,9 @@ def search(query, log_serach_log=False, raise_on_error=True):
     # service.jobs.export
     rr = results.ResultsReader(splunk.jobs.export(query, **{"id": sid}))
 
-    if log_serach_log:
+    if log_search_log:
 
-        #logging.info("waiting for log file existance...")
+        #logging.info("waiting for log file to exist...")
         search_log_path = "/opt/splunk/var/run/splunk/dispatch/%s/search.log" % sid
         while True:
             if os.path.exists(search_log_path):
@@ -61,7 +61,7 @@ def search(query, log_serach_log=False, raise_on_error=True):
 
         ChunkedExternProcessor_expression = re.compile(r".*\s(\S+)\s+ChunkedExternProcessor - (.+)$")
 
-        def log_serach_log_thread():
+        def log_search_log_thread():
             try:
                 #logging.info("search log:")
                 for line in follow(search_log_file):
@@ -83,14 +83,14 @@ def search(query, log_serach_log=False, raise_on_error=True):
                         else:
                             log = logging.warning
                             msg = "UNEXPECTED search message type (%s): %s" % (level, msg)
-                        log("%s - %s" % (level, msg))
+                        log("   %s" % (msg))
                     # else:
                     #    logging.info("non match: %s" % (line))
 
             except ValueError:
                 pass
 
-        thread = threading.Thread(target=log_serach_log_thread)
+        thread = threading.Thread(target=log_search_log_thread)
         thread.daemon = True
         thread.start()
 
@@ -122,7 +122,7 @@ def search(query, log_serach_log=False, raise_on_error=True):
         elif isinstance(result, dict):
             yield result
 
-    if log_serach_log:
+    if log_search_log:
         search_log_file.close()
         thread.join()
 

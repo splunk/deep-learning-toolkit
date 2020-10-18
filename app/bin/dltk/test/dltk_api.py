@@ -53,7 +53,7 @@ def call(method, path, data=None, return_entries=True):
             for event in splunk_api.search("| search earliest=%s latest=%s index=_internal sourcetype=splunk_python" % (
                 earliest_time,
                 latest_time,
-            ), log_serach_log=False):
+            ), log_search_log=False):
                 raw = event["_raw"]
-                logging.warning(raw)
+                logging.warning("   %s" % raw)
         raise

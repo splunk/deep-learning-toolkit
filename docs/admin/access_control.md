@@ -6,7 +6,7 @@ A regular Splunk user (a user importing the built-in `user` role) can open DLTK 
 
 DLTK adds the following roles:
 
-- `dltk_user` (imports `user` role)
+- `dltk_user`
 - `dltk_engineer` (imports `dltk_user` role)
 - `dltk_admin` (imports `dltk_engineer` role)
 

@@ -18,3 +18,5 @@ $SPLUNK_HOME/bin/splunk restart
 ```
 
 Once installed, you can navigate to the *Deep Learning Toolkit for Splunk* in the Splunk web interface.
+
+Next, please see the [Configure Users and Roles](access_control.md) documentation.

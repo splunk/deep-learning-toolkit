@@ -149,6 +149,10 @@ class SparkExecution(KubernetesExecution):
                                         self.logger.warning("spark driver logs: %s" % driver_logs)
                                     except:
                                         self.logger.warning("could not read spark driver logs")
+                                        return execution.ExecutionResult(
+                                            wait=5,
+                                            final=False,
+                                        )
                             if "errorMessage" in spark_application_state:
                                 raise execution.UserFriendlyError("Spark failed: %s" % spark_application_state["errorMessage"])
                             raise execution.UserFriendlyError("Spark failed: %s" % spark_application_state)
@@ -195,7 +199,7 @@ class SparkExecution(KubernetesExecution):
                     error="unexpected status: %s" % status["status"]
                 )
         received_events = self.receive_events()
-        self.logger.warning("received_events: %s" % received_events)
+        #self.logger.warning("received_events: %s" % received_events)
         if received_events:
             return execution.ExecutionResult(
                 events=received_events,

@@ -489,7 +489,6 @@ class SparkExecution(KubernetesExecution):
                             "DLTK_RECEIVER_COUNT": self.deployment.get_param("receiver_count"),
                             "DLTK_BATCH_INTERVAL": self.deployment.get_param("batch_interval"),
                             "DLTK_OUTBOUND_RELAY": outbound_relay_source_service.metadata.name,
-                            "DLTK_WAIT_TIME_BEFORE_STOP": self.deployment.get_param("wait_time_before_stop"),
                             "DLTK_CHECKPOINT_URL": self.deployment.get_param("checkpoint_url"),
                             "DLTK_HDFS_URL": self.deployment.get_param("spark_hdfs_url"),
                             "DLTK_HDFS_PATH": self.get_hdfs_directory_path(),
@@ -530,10 +529,6 @@ class SparkExecution(KubernetesExecution):
                         #    {
                         #        "name": "DLTK_OUTBOUND_RELAY",
                         #        "value": outbound_relay_source_service.metadata.name,
-                        #    },
-                        #    {
-                        #        "name": "DLTK_WAIT_TIME_BEFORE_STOP",
-                        #        "value": self.deployment.get_param("wait_time_before_stop"),
                         #    },
                         #    {
                         #        "name": "DLTK_CHECKPOINT_URL",

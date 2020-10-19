@@ -69,8 +69,10 @@ class BaseExecution(KubernetesExecution):
         if status == "error":
             return execution.ExecutionResult(error=result['message'])
 
-        self.logger.warning("returns %s" % str(returns))
+        return_events = []
+        if "results" in result:
+            return_events = result['results']
 
         return execution.ExecutionResult(
-            events=result['results'],
+            events=return_events,
         )

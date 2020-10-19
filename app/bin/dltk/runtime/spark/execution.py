@@ -140,7 +140,18 @@ class SparkExecution(KubernetesExecution):
                         spark_application_state_state = spark_application_state["state"]
                         self.logger.warning("spark application state: %s" % spark_application_state_state)
                         if spark_application_state_state == "FAILED":
-                            raise execution.UserFriendlyError("Spark failed with %s" % spark_application_state)
+                            if "driverInfo" in spark_status:
+                                driver_info = spark_status["driverInfo"]
+                                if "podName" in driver_info:
+                                    driver_pod_name = driver_info["podName"]
+                                    try:
+                                        driver_logs = self.get_logs(driver_pod_name, tail_lines=100)
+                                        self.logger.warning("spark driver logs: %s" % driver_logs)
+                                    except:
+                                        self.logger.warning("could not read spark driver logs")
+                            if "errorMessage" in spark_application_state:
+                                raise execution.UserFriendlyError("Spark failed: %s" % spark_application_state["errorMessage"])
+                            raise execution.UserFriendlyError("Spark failed: %s" % spark_application_state)
                         if spark_application_state_state == "RUNNING":
                             spark_application_running = True
 

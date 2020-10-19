@@ -29,3 +29,10 @@ class KubernetesExecution(execution.Execution):
                 include_ingresses=True,
                 additional_label_selector=self.get_object_labels(),
             )
+
+    def get_logs(self, pod_name, tail_lines=None):
+        return self.deployment.core_api.read_namespaced_pod_log(
+            name=pod_name,
+            namespace=self.deployment.environment.namespace,
+            tail_lines=tail_lines,
+        )

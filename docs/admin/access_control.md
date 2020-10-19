@@ -2,7 +2,7 @@
 
 DLTK uses [Splunk's role-based access control system](https://docs.splunk.com/Documentation/Splunk/8.0.6/Security/Aboutusersandroles).
 
-A regular Splunk user (a user importing the built-in `user` role) can open DLTK dashboards, but cannot change/manage anything nor execute algorithms. A Splunk admin user (a user importing the built-in `admin` role) can has the same DLTK capabilities as the `dltk_admin` role.
+A regular Splunk user (a user importing the built-in `user` role) can open DLTK dashboards, but cannot change/manage anything nor execute algorithms. A Splunk admin user (a user importing the built-in `admin` role) has all the capabilities requires for administrating DLTK.
 
 DLTK adds the following roles:
 

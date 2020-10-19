@@ -60,7 +60,7 @@ if __name__ == "__main__":
     tracer = create_tracer(
         config=tracer_config,
         service_name="dltk-spark-driver",
-        validate=True,
+        #validate=True,
     )
 
     search_id = os.getenv("DLTK_SEARCH_ID", "")

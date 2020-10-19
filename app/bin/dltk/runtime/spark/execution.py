@@ -146,7 +146,12 @@ class SparkExecution(KubernetesExecution):
                                     driver_pod_name = driver_info["podName"]
                                     self.logger.warning("spark driver pod name: %s" % driver_pod_name)
                                     try:
-                                        driver_logs = self.get_logs(driver_pod_name, tail_lines=100)
+                                        driver_logs = self.deployment.core_api.read_namespaced_pod_log(
+                                            name=driver_pod_name,
+                                            namespace=self.deployment.environment.namespace,
+                                            tail_lines=100,
+                                            container="spark-kubernetes-driver",
+                                        )
                                         self.logger.warning("spark driver logs: %s" % driver_logs)
                                     except:
                                         self.logger.warning("could not read spark driver logs")

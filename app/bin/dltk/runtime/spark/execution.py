@@ -72,10 +72,14 @@ class SparkExecution(KubernetesExecution):
     def executor_cores(self):
         return int(self.get_param("executor_cores"))
 
+    @property
+    def executor_instance_count(self):
+        return int(self.deployment.get_param("executor_instance_count"))
+
     def setup(self):
         if not self.context.is_preop:
             self.logger.warning("checking for existing spark app ...")
-            if not self.get_spark_app():
+            if self.get_spark_app() is None:
                 with opentracing.tracer.start_active_span("start-k8s-objects"):
                     self.logger.warning("deploying inbound relay ...")
                     if self.input_hdfs_data_path == "via_relay":
@@ -88,6 +92,27 @@ class SparkExecution(KubernetesExecution):
 
     output_completed = False
     sent_start_signal = False
+    spark_app_is_ready = False
+
+    # status:
+    #    applicationState:
+    #        state: RUNNING
+    #    driverInfo:
+    #        podName: dltk-3ca071d7-1603087797-5597-driver
+    #        webUIAddress: 10.100.179.100:4040
+    #        webUIPort: 4040
+    #        webUIServiceName: dltk-3ca071d7-1603087797-5597-ui-svc
+    #    executionAttempts: 1
+    #    executorState:
+    #        dltk-3ca071d7-1603087797-5597-1603087801221-exec-1: RUNNING
+    #        dltk-3ca071d7-1603087797-5597-1603087801221-exec-2: RUNNING
+    #        dltk-3ca071d7-1603087797-5597-1603087801221-exec-3: RUNNING
+    #        dltk-3ca071d7-1603087797-5597-1603087801221-exec-4: RUNNING
+    #    lastSubmissionAttemptTime: "2020-10-19T06:10:02Z"
+    #    sparkApplicationId: spark-cf4d132a402743f182dc77efbf4e8e50
+    #    submissionAttempts: 1
+    #    submissionID: 7cc33680-e6fd-4c4a-a57b-872efb6e5568
+    #    terminationTime: null
 
     def handle(self, buffer, finished):
         if buffer:
@@ -96,6 +121,47 @@ class SparkExecution(KubernetesExecution):
             return
         if not finished:
             return
+        if not self.spark_app_is_ready:
+            spark_app = self.get_spark_app()
+
+            if not "status" in spark_app:
+                self.logger.warning("could not find 'status' in spark app object")
+            else:
+                spark_status = spark_app["status"]
+
+                spark_application_running = False
+                if not "applicationState" in spark_status:
+                    self.logger.warning("could not find 'applicationState' in spark app status")
+                else:
+                    spark_application_state = spark_status["applicationState"]
+                    if not "state" in spark_application_state:
+                        self.logger.warning("could not find 'state' in 'applicationState'")
+                    else:
+                        spark_application_state_state = spark_application_state["state"]
+                        self.logger.warning("spark application state: %s" % spark_application_state_state)
+                        if spark_application_state_state == "RUNNING":
+                            spark_application_running = True
+
+                spark_executors_running = False
+                if not "executorState" in spark_status:
+                    self.logger.warning("could not find 'executorState' in spark app status")
+                else:
+                    spark_executor_state = spark_status["executorState"]
+                    number_of_running_executors = 0
+                    for executor_name, executor_state in spark_executor_state.items():
+                        self.logger.warning("executor %s: %s" % (executor_name, executor_state))
+                        if executor_state == "RUNNING":
+                            number_of_running_executors += 1
+                    if number_of_running_executors == self.executor_instance_count:
+                        spark_executors_running = True
+
+                self.spark_app_is_ready = spark_application_running and spark_executors_running
+
+            if not self.spark_app_is_ready:
+                return execution.ExecutionResult(
+                    wait=1,
+                    final=False,
+                )
         if not self.sent_start_signal:
             self.signal_start()
             self.sent_start_signal = True
@@ -313,7 +379,9 @@ class SparkExecution(KubernetesExecution):
             plural=spark_application.crd_plural,
             label_selector=self.deployment.generate_object_label_selector(self.get_object_labels())
         )["items"]
-        return len(custom_objects) > 0
+        if not custom_objects:
+            return None
+        return custom_objects[0]
 
     def get_hdfs_directory_path(self):
         return "/" + self.context.search_id
@@ -471,7 +539,7 @@ class SparkExecution(KubernetesExecution):
                         "image": self.executor_image,
                         "coreRequest": str(self.executor_cores),
                         "coreLimit": str(self.executor_cores),
-                        "instances": int(self.deployment.get_param("executor_instance_count")),
+                        "instances": self.executor_instance_count,
                         "memory": "%sm" % self.deployment.get_param("executor_memory_mb"),
                         "labels": self.deployment.generate_object_labels(self.get_object_labels({
                             "component": "executor",

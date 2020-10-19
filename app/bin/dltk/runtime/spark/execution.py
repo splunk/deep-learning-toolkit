@@ -140,7 +140,29 @@ class SparkExecution(KubernetesExecution):
                         spark_application_state_state = spark_application_state["state"]
                         self.logger.warning("spark application state: %s" % spark_application_state_state)
                         if spark_application_state_state == "FAILED":
-                            raise execution.UserFriendlyError("Spark failed with %s" % spark_application_state)
+                            if "driverInfo" in spark_status:
+                                driver_info = spark_status["driverInfo"]
+                                if "podName" in driver_info:
+                                    driver_pod_name = driver_info["podName"]
+                                    self.logger.warning("spark driver pod name: %s" % driver_pod_name)
+                                    try:
+                                        driver_logs = self.deployment.core_api.read_namespaced_pod_log(
+                                            name=driver_pod_name,
+                                            namespace=self.deployment.environment.namespace,
+                                            tail_lines=100,
+                                            container="spark-kubernetes-driver",
+                                        )
+                                        self.logger.warning("spark driver logs: %s" % driver_logs)
+                                    except:
+                                        self.logger.warning("could not read spark driver logs")
+                                    try:
+                                        driver_pod_status = self.deployment.get_pod_status(driver_pod_name)
+                                        self.logger.warning("spark driver pod status: %s" % driver_pod_status)
+                                    except:
+                                        self.logger.warning("could not read spark driver pod status")
+                            if "errorMessage" in spark_application_state:
+                                raise execution.UserFriendlyError("Spark failed: %s" % spark_application_state["errorMessage"])
+                            raise execution.UserFriendlyError("Spark failed: %s" % spark_application_state)
                         if spark_application_state_state == "RUNNING":
                             spark_application_running = True
 
@@ -184,7 +206,7 @@ class SparkExecution(KubernetesExecution):
                     error="unexpected status: %s" % status["status"]
                 )
         received_events = self.receive_events()
-        self.logger.warning("received_events: %s" % received_events)
+        #self.logger.warning("received_events: %s" % received_events)
         if received_events:
             return execution.ExecutionResult(
                 events=received_events,
@@ -467,7 +489,6 @@ class SparkExecution(KubernetesExecution):
                             "DLTK_RECEIVER_COUNT": self.deployment.get_param("receiver_count"),
                             "DLTK_BATCH_INTERVAL": self.deployment.get_param("batch_interval"),
                             "DLTK_OUTBOUND_RELAY": outbound_relay_source_service.metadata.name,
-                            "DLTK_WAIT_TIME_BEFORE_STOP": self.deployment.get_param("wait_time_before_stop"),
                             "DLTK_CHECKPOINT_URL": self.deployment.get_param("checkpoint_url"),
                             "DLTK_HDFS_URL": self.deployment.get_param("spark_hdfs_url"),
                             "DLTK_HDFS_PATH": self.get_hdfs_directory_path(),
@@ -508,10 +529,6 @@ class SparkExecution(KubernetesExecution):
                         #    {
                         #        "name": "DLTK_OUTBOUND_RELAY",
                         #        "value": outbound_relay_source_service.metadata.name,
-                        #    },
-                        #    {
-                        #        "name": "DLTK_WAIT_TIME_BEFORE_STOP",
-                        #        "value": self.deployment.get_param("wait_time_before_stop"),
                         #    },
                         #    {
                         #        "name": "DLTK_CHECKPOINT_URL",

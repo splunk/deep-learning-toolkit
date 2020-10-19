@@ -22,6 +22,7 @@ from . result import ExecutionResult
 from dltk.core import is_truthy
 from . import splunk_protocol
 from . import options_parser
+from . import errors
 
 
 # https://conf.splunk.com/files/2017/slides/extending-spl-with-custom-search-commands-and-the-splunk-sdk-for-python.pdf
@@ -388,6 +389,11 @@ class ExecutionCommand(object):
                             result = self.execution.handle(self.buffer, final_chunk_from_splunk)
                         if result is None:
                             result = ExecutionResult()
+                    except errors.UserFriendlyError as e:
+                        self.execution.logger.error("%s" % e)
+                        result = ExecutionResult(
+                            error="%s" % e,
+                        )
                     except Exception as e:
                         self.execution.logger.warning(traceback.format_exc())
                         result = ExecutionResult(

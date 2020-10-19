@@ -60,7 +60,7 @@ if __name__ == "__main__":
     tracer = create_tracer(
         config=tracer_config,
         service_name="dltk-spark-driver",
-        validate=True,
+        #validate=True,
     )
 
     search_id = os.getenv("DLTK_SEARCH_ID", "")
@@ -153,8 +153,6 @@ if __name__ == "__main__":
     #    logging.info("DLTK_BATCH_INTERVAL=%s" % batch_interval)
     #    receiver_count = int(os.getenv("DLTK_RECEIVER_COUNT", 2))
     #    logging.info("DLTK_RECEIVER_COUNT=%s" % receiver_count)
-    #    wait_time_before_stop = int(os.getenv("DLTK_WAIT_TIME_BEFORE_STOP", 30))
-    #    logging.info("DLTK_WAIT_TIME_BEFORE_STOP=%s" % wait_time_before_stop)
     #    checkpoint_url = os.getenv("DLTK_CHECKPOINT_URL", "")
     #    logging.info("DLTK_CHECKPOINT_URL=%s" % checkpoint_url)
     #    # https://spark.apache.org/docs/latest/streaming-programming-guide.html
@@ -178,8 +176,6 @@ if __name__ == "__main__":
     #        wait_for_relay_status(inbound_relay_sink_url, "done")
     #    def background_poller():
     #        wait_until_all_events_received()
-    #        logging.info("waiting to finish up...")
-    #        time.sleep(wait_time_before_stop)
     #        logging.info("stopping context...")
     #        streaming_context.stop(stopSparkContext=False, stopGraceFully=True)
     #    # background_poller_thread = threading.Thread(target=background_poller, args=())
@@ -187,8 +183,6 @@ if __name__ == "__main__":
     #    # background_poller_thread.start()
     #    # streaming_context.awaitTermination()
     #    wait_until_all_events_received()
-    #    logging.info("waiting to finish up...")
-    #    time.sleep(wait_time_before_stop)
     #    logging.info("stopping context...")
     #    streaming_context.stop(stopSparkContext=True, stopGraceFully=True)
     #    close_output(outbound_relay_source_url)

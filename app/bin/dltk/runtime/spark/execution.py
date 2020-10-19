@@ -144,15 +144,17 @@ class SparkExecution(KubernetesExecution):
                                 driver_info = spark_status["driverInfo"]
                                 if "podName" in driver_info:
                                     driver_pod_name = driver_info["podName"]
+                                    self.logger.warning("spark driver pod name: %s" % driver_pod_name)
                                     try:
                                         driver_logs = self.get_logs(driver_pod_name, tail_lines=100)
                                         self.logger.warning("spark driver logs: %s" % driver_logs)
                                     except:
                                         self.logger.warning("could not read spark driver logs")
-                                        return execution.ExecutionResult(
-                                            wait=5,
-                                            final=False,
-                                        )
+                                    try:
+                                        driver_pod_status = self.deployment.get_pod_status(driver_pod_name)
+                                        self.logger.warning("spark driver pod status: %s" % driver_pod_status)
+                                    except:
+                                        self.logger.warning("could not read spark driver pod status")
                             if "errorMessage" in spark_application_state:
                                 raise execution.UserFriendlyError("Spark failed: %s" % spark_application_state["errorMessage"])
                             raise execution.UserFriendlyError("Spark failed: %s" % spark_application_state)

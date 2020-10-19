@@ -497,6 +497,12 @@ class KubernetesDeployment(Deployment):
             )
         return secret
 
+    def get_pod_status(self, pod_name):
+        return self.core_api.read_namespaced_pod_status(
+            name=pod_name,
+            namespace=self.environment.namespace,
+        )
+
     def get_deployment(self, label_selector):
         try:
             deployments = self.apps_api.list_namespaced_deployment(

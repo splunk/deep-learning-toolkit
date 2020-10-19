@@ -35,6 +35,8 @@ def set_up():
             "namespace": "default",
             "image_pull_policy": "Never",
             "tag_label": "test",
+            "executor_cores": "1",
+            "executor_instance_count": "1",
         })
         image_pull_policy = os.getenv("DLTK_IMAGE_PULL_POLICY", "")
         if image_pull_policy:

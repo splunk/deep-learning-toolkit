@@ -24,23 +24,29 @@ RUN wget --quiet https://repo.anaconda.com/archive/Anaconda3-2020.02-Linux-x86_6
 RUN conda install -n base nb_conda waitress nodejs datashader tensorflow-gpu pytorch gensim dask-ml 
 
 # Setup jupyter lab extensions
-#RUN conda install -n base -c conda-forge dask-labextension
-#RUN jupyter labextension install dask-labextension
-#RUN jupyter serverextension enable --py --sys-prefix dask_labextension --user
+RUN conda install -n base -c conda-forge dask-labextension
+RUN jupyter labextension install dask-labextension
+RUN jupyter serverextension enable --py --sys-prefix dask_labextension --user
 
-#RUN conda install -n base -c conda-forge jupyterlab-nvdashboard
-#RUN jupyter labextension install jupyterlab-nvdashboard
+RUN pip install jupyterlab-nvdashboard
+RUN jupyter labextension install jupyterlab-nvdashboard
 
-#RUN pip install jupyter-tensorboard
-#RUN jupyter labextension install jupyterlab_tensorboard
-#RUN jupyter serverextension enable --py --sys-prefix jupyter_tensorboard
-#RUN jupyter tensorboard enable --user 
-
-#RUN jupyter lab clean
+RUN pip install jupyter-tensorboard
+RUN jupyter labextension install jupyterlab_tensorboard
+RUN jupyter serverextension enable --py --sys-prefix jupyter_tensorboard
+RUN jupyter tensorboard enable --user 
 
 # Install additional frameworks
-#RUN conda install -n base -c conda-forge dask-xgboost spacy fbprophet pomegranate shap lime umap-learn tslearn kmodes
-#RUN python -m spacy download en_core_web_sm
+RUN conda install -n base -c conda-forge dask-xgboost spacy fbprophet pomegranate shap lime umap-learn tslearn kmodes imbalanced-learn pymc3 
+RUN python -m spacy download en_core_web_sm
+
+RUN pip install pyarrow>=0.15 vaex>=3.0.0
+
+# Install additional user libraries
+#RUN pip install ginza
+
+RUN jupyter lab build
+RUN jupyter lab clean
 
 RUN mkdir /dltk
 # Define working directory
@@ -63,9 +69,6 @@ RUN chgrp -R 0 /srv && \
     chmod -R g=u /srv
 RUN chmod g+w /etc/passwd
 USER 1001
-
-# Install additional user libraries
-# RUN pip install ginza
 
 # Expose container port 5000 (MLTK Container Service) and 8888 (Notebook) and 6006 (Tensorboard)
 EXPOSE 5000 8888 6006

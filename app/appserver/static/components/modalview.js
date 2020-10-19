@@ -211,7 +211,7 @@ define([
                             _self.options.flashMessages.flashMsgCollection.add({
                                 key: 'token-function-save',
                                 type: 'error',
-                                html: _.escape(_(JSON.stringify(e.data!=false ? e.data : e.message)).t())
+                                html: _.escape(_(JSON.stringify(e.data!=false ? e.data : e.message)??'General error.').t())
                             });
                             return;
                         }

@@ -4,7 +4,7 @@
 [<environment_name>]
 
 connector =
-
+* Required.
 
 #######################################################################
 # Kubernetes connector settings

@@ -60,7 +60,7 @@ def run_job(algorithm_name):
         else:
             log = logging.warning
             msg = "UNEXPECTED LEVEL (%s): %s" % (level, msg)
-        log(msg)
+        log("   %s" % msg)
 
 
 def list_deployments(algorithm_name):

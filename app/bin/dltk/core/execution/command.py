@@ -79,7 +79,7 @@ class ExecutionCommand(object):
 
     def reset_buffer(self):
         # TODO: set initial size depending on max_buffer_size
-        #       but make size it is never exeeded.
+        #       but make size it is never exceeded.
         self.buffer_size = 0
         self.buffer = io.BytesIO()
 
@@ -358,15 +358,20 @@ class ExecutionCommand(object):
             },
         ) as chunk_scope:
 
-            call_deployment = final_chunk_from_splunk
-            if not call_deployment:
+            if final_chunk_from_splunk:
+                self.execution.logger.warning("is final chunk from Splunk")
+                call_deployment = True
+            else:
                 if self.max_buffer_size == 0:
-                    pass
+                    call_deployment = False
+                    self.execution.logger.warning("append to buffer until all data received")
                 elif self.buffer_size > self.max_buffer_size:
+                    self.execution.logger.warning("max buffer size exceeded")
                     call_deployment = True
+                else:
+                    call_deployment = False
 
             if call_deployment:
-                self.execution.logger.warning("send %s bytes to execution handler" % self.buffer_size)
                 with self.tracer.start_active_span(
                     'call_handler',
                     tags={
@@ -374,14 +379,19 @@ class ExecutionCommand(object):
                     },
                 ):
                     try:
-                        self.buffer.seek(0)
-                        result = self.execution.handle(self.buffer, final_chunk_from_splunk)
+                        if self.buffer_size == 0:
+                            self.execution.logger.warning("call execution handler (not data)")
+                            result = self.execution.handle(None, final_chunk_from_splunk)
+                        else:
+                            self.execution.logger.warning("call execution handler (%s bytes of data)" % self.buffer_size)
+                            self.buffer.seek(0)
+                            result = self.execution.handle(self.buffer, final_chunk_from_splunk)
                         if result is None:
                             result = ExecutionResult()
                     except Exception as e:
                         self.execution.logger.warning(traceback.format_exc())
                         result = ExecutionResult(
-                            error="Unexpected error calling deployment handler: %s" % (
+                            error="Error handling chunk: %s" % (
                                 ', '.join(traceback.format_exception_only(type(e), e))
                             ),
                         )

@@ -27,4 +27,6 @@ for test_type in test_types:
 
 if __name__ == '__main__':
     runner = unittest.TextTestRunner(failfast=True)
-    runner.run(suite)
+    result = runner.run(suite)
+    if not result.wasSuccessful():
+        sys.exit(1)

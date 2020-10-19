@@ -85,11 +85,16 @@ define([
                                 await rest.createRestEndpoint().postAsync(`deployments`, deployment);
                             }
                             if (p){
+                                var algoparams = {
+                                    algorithm: _.escape(_(algorithm["name"]).t())
+                                };
                                 for (var key in p){
-                                    if (p[key] && typeof(p[key])!='function')
-                                        algorithm[key] = _.escape(_(p[key]).t());
+                                    
+                                    if (p[key] && typeof(p[key])!='function'){
+                                        algoparams[key] = _.escape(_(p[key]).t());
+                                    }
                                 }
-                                await rest.createRestEndpoint().putAsync(`algorithm_params`, algorithm);
+                                await rest.createRestEndpoint().putAsync(`algorithm_params`, algoparams);
                             }
                         }
                     },
@@ -152,13 +157,27 @@ define([
                         $Modal.children.createDialog.changedFields = {};
                         return true;
                     },
-                    savehandler: async function (r, el) {
-                        if (r['environment']){
+                    savehandler: async function (modalvalues, el) {
+                        let r = modalvalues['base'], p = modalvalues['runtime'];
+                        if (r){
                             var deployment = {
                                 algorithm: _.escape(_(r["name"]).t()),
                                 environment: _.escape(_(r["environment"]).t()) 
                             }      
                             await rest.createRestEndpoint().postAsync(`deployments`, deployment);
+                            if (p){
+                                var params = {
+                                    algorithm: _.escape(_(r["name"]).t()),
+                                    environment: _.escape(_(r["environment"]).t()) 
+                                };
+                                for (var key in p){
+                                    
+                                    if (p[key] && typeof(p[key])!='function'){
+                                        params[key] = _.escape(_(p[key]).t());
+                                    }
+                                }
+                                await rest.createRestEndpoint().putAsync(`deployment_params`, params);
+                            }
                         }
                         return true;
                     },
@@ -221,7 +240,8 @@ define([
                         $Modal.children.createDialog.changedFields = {};
                         return true;
                     },
-                    savehandler: async function (r, el) {
+                    savehandler: async function (modalvalues, el) {
+                        let r = modalvalues['base'];
                         if (r['entityname']){
                             var data = {
                                 algorithm: _.escape(_(r["entityname"]).t()),

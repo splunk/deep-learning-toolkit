@@ -48,7 +48,7 @@ class TestEchoingRDD(SparkTestCase):
             dltk_environment.get_name(),
             "echo_rdd",
         )
-        output_count = len(list(splunk_api.search(query, log_serach_log=True, raise_on_error=True)))
+        output_count = len(list(splunk_api.search(query, log_search_log=True, raise_on_error=True)))
         self.assertEqual(output_count, 100, "Unexpected result count")
 
 
@@ -66,7 +66,7 @@ class TestFailingMethod(SparkTestCase):
             "expected_error",
         )
         with self.assertRaisesRegex(Exception, 'expected_error'):
-            list(splunk_api.search(query, log_serach_log=True, raise_on_error=True))
+            list(splunk_api.search(query, log_search_log=True, raise_on_error=True))
 
 
 logging.basicConfig(stream=sys.stdout)

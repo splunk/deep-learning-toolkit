@@ -24,7 +24,7 @@
   <row>
     <panel>
       <html>
-      <img src="/static/app/mltk-container/icons/classifier.png" style="width:5%; height:5%; float:right;"/>
+      <img src="/static/app/deep-learning-toolkit/icons/classifier.png" style="width:5%; height:5%; float:right;"/>
         <h1>Example for PyTorch</h1>
         <p>This example shows a simple neural network example using PyTorch for building a multiclass classifier applied to the favourite iris dataset. The more training epochs you run the model the better classification results get. The notebook is device agnostic and can run both on a CPU or GPU.</p>
       </html>

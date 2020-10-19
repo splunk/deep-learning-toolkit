@@ -139,6 +139,8 @@ class SparkExecution(KubernetesExecution):
                     else:
                         spark_application_state_state = spark_application_state["state"]
                         self.logger.warning("spark application state: %s" % spark_application_state_state)
+                        if spark_application_state_state == "FAILED":
+                            raise execution.UserFriendlyError("Spark failed with %s" % spark_application_state)
                         if spark_application_state_state == "RUNNING":
                             spark_application_running = True
 

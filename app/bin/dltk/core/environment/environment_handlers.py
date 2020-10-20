@@ -76,6 +76,8 @@ class EnvironmentParamsHandler(BaseRestHandler):
     def handle_PUT(self):
         environment_name = self.get_param("environment")
         if not environment_name:
+            environment_name = self.get_param("name")
+        if not environment_name:
             raise Exception("requires environment")
         e = environment_api.get(self.splunk, environment_name)
         changed_value = False

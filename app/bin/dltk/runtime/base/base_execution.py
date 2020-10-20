@@ -10,6 +10,22 @@ __all__ = ["BaseExecution"]
 
 class BaseExecution(KubernetesExecution):
 
+    def handle_summary(self, url):
+        request = urllib.request.Request(
+            url,
+            method="GET",
+            headers={
+                "Content-Type": "application/json",
+            }
+        )
+        response = urllib.request.urlopen(request)
+        returns = response.read()
+        summary_result = { "summary" : str(returns.decode()) }
+        return execution.ExecutionResult(
+            events=[summary_result],
+        )
+
+
     def handle(self, buffer, finished):
 
         base_url = self.deployment.runtime_status["api_url"]
@@ -18,7 +34,8 @@ class BaseExecution(KubernetesExecution):
         elif self.context.method.name == "apply":
             url = urllib.parse.urljoin(base_url, "apply")
         elif self.context.method.name == "summary":
-            url = urllib.parse.urljoin(base_url, "summary")
+            url = urllib.parse.urljoin(base_url, "summary")            
+            return self.handle_summary(url)         
         else:
             raise Exception("unsupported method")
 
@@ -46,6 +63,8 @@ class BaseExecution(KubernetesExecution):
             },
         }
         for k, v in self.context.params.items():
+            if k == "model_name":
+                content["meta"]["options"]["model_name"] = v
             if k == "feature_variables" or k == "target_variables":
                 v = v.split(',')
                 content["meta"][k] = v
@@ -59,6 +78,7 @@ class BaseExecution(KubernetesExecution):
                 "Content-Type": "application/json",
             }
         )
+        
         response = urllib.request.urlopen(request)
         returns = response.read()
 

@@ -3,7 +3,7 @@
 This guide is divided into the following sections:
 
 - [Example Use Cases](examples.md)
-- Understanding Core Concepts
+- [Core Concepts](core/README.md)
   - [Environments](core/environments.md)
   - [Algorithms](core/algorithms.md)
   - [Runtimes](core/runtimes.md)

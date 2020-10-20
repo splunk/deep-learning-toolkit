@@ -6,9 +6,9 @@ It is divided into the following sections:
 
 - [Installing DLTK](install.md)
 - [Configure Users and Roles](access_control.md)
-- Connecting to Environments
+- [Connecting to Environments](environment/README.md)
   - [Kubernetes](environment/kubernetes.md)
-- Configuring Runtimes
+- [Configuring Runtimes](runtime/README.md)
   - [Spark](runtime/spark.md)
   - [Base](runtime/base.md)
 - [Monitoring DLTK](monitor.md)

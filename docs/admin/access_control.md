@@ -14,7 +14,7 @@ Users in the `dltk_user` role can execute DLTK algorithms. Users in the `dltk_en
 
 Depending on what the users of your Splunk environment should be able to do, make sure the corresponding Splunk user objects import one of the above DLTK roles.
 
-The following describes how to assign a DLTK role to an existing Splunk user:
+The following steps describe how to assign a DLTK role to an existing Splunk user:
 
 1. Open the Splunk web interface
 2. Click on *Settings* in the top Splunk bar
@@ -23,3 +23,5 @@ The following describes how to assign a DLTK role to an existing Splunk user:
 5. Click on *Edit* in the *Actions* table column
 6. Assign roles by clicking on the DLTK role name (`dltk_user`, `dltk_engineer` or `dltk_admin`) in the list of *Available item(s)* to make sure they appear in the list of *Selected item(s)*
 7. Click *Save*
+
+Next, please see the [Connecting to Environments](environment/README.md) documentation.

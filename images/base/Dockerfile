@@ -58,6 +58,7 @@ COPY app /dltk/app
 COPY notebooks /dltk/notebooks
 
 # Copy jupyter config
+COPY config/jupyter_notebook_conversion.py /dltk/.jupyter/jupyter_notebook_conversion.py
 COPY config/jupyter_notebook_config.py /dltk/.jupyter/jupyter_notebook_config.py
 # Copy jupyter notebook conversion template to export python module
 COPY config/jupyter_notebook_conversion.tpl /dltk/.jupyter/jupyter_notebook_conversion.tpl

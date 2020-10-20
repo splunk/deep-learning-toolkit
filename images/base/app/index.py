@@ -3,7 +3,8 @@
 # Author: Philipp Drieger, Principal Machine Learning Architect, 2018-2020
 # -------------------------------------------------------------------------------
 import sys
-sys.path.insert(0,"/srv/app")
+sys.path.insert(0, "/srv/app")
+sys.path.insert(0, "/dltk/.jupyter")
 import os
 import json
 import time
@@ -22,7 +23,7 @@ from waitress import serve
 app = Flask(__name__)
 
 # -------------------------------------------------------------------------------
-# GLOBAL variables 
+# GLOBAL variables
 # -------------------------------------------------------------------------------
 app.Model = {}
 app.NotebookDataPath = "/srv/notebooks/data/"
@@ -31,6 +32,8 @@ app.NotebookDataPath = "/srv/notebooks/data/"
 # HELPER functions
 # -------------------------------------------------------------------------------
 # helper function: clean param
+
+
 def get_clean_param(p):
     return p.lstrip("\"").rstrip("\"")
 
@@ -41,11 +44,13 @@ def get_clean_param(p):
 # set an icon if requested
 @app.route('/favicon.ico')
 def favicon():
-    return send_from_directory(os.path.join(app.root_path, 'static'),'favicon.ico', mimetype='image/vnd.microsoft.icon')
+    return send_from_directory(os.path.join(app.root_path, 'static'), 'favicon.ico', mimetype='image/vnd.microsoft.icon')
 
 # -------------------------------------------------------------------------------
-# fit routine 
+# fit routine
 # expects json object { "data" : "<string of csv serialized pandas dataframe>", "meta" : {<json dict object for parameters>}}
+
+
 @app.route('/fit', methods=['POST'])
 def set_fit():
     # prepare a return object
@@ -61,10 +66,11 @@ def set_fit():
         app.Model["meta"] = dp["meta"]
         print("/fit: meta info: ", str(app.Model["meta"]))
     except Exception as e:
-        response["message"] += 'unable to parse json from POST data. Provide a JSON object with structure { "data" : "<string of csv serialized pandas dataframe>", "meta" : {<json dict object for parameters>}}. Ended with exception: ' + str(e)
+        response["message"] += 'unable to parse json from POST data. Provide a JSON object with structure { "data" : "<string of csv serialized pandas dataframe>", "meta" : {<json dict object for parameters>}}. Ended with exception: ' + str(
+            e)
         return json.dumps(response)
 
-    # 2. convert to dataframe 
+    # 2. convert to dataframe
     try:
         # TODO check with compression option and chunked mode
         # FIX for tensorflow-gpu image does not have compat StringIO
@@ -85,7 +91,7 @@ def set_fit():
     except Exception as e:
         response["message"] += 'unable to convert raw data to pandas dataframe. Ended with exception: ' + str(e)
         return json.dumps(response)
-    
+
     # 3. check for mode = stage and if so early exit the fit
     try:
         if "params" in app.Model["meta"]["options"]:
@@ -94,11 +100,11 @@ def set_fit():
                 # get, trim and lowercase the mode flag
                 params_mode = get_clean_param(params["mode"])
                 # if not production then just copy data and early exit
-                if params_mode=="stage":
+                if params_mode == "stage":
                     print("/fit: in staging mode: staging input dataframe for model (" + app.Model["model_name"] + ")")
-                    path = app.NotebookDataPath+app.Model["model_name"]+'.csv'
+                    path = app.NotebookDataPath + app.Model["model_name"] + '.csv'
                     app.Model["df"].to_csv(path, index=False)
-                    path_json = app.NotebookDataPath+app.Model["model_name"]+'.json'
+                    path_json = app.NotebookDataPath + app.Model["model_name"] + '.json'
                     with open(path_json, 'w') as param_file:
                         json.dump(app.Model["meta"], param_file)
                 response["message"] = "Model data staged successfully in " + path + " - no model was built yet."
@@ -107,7 +113,6 @@ def set_fit():
     except Exception as e:
         response["message"] += 'unable stage dataframe. Ended with exception: ' + str(e)
         return json.dumps(response)
-
 
     # 4. create and import module code
     try:
@@ -129,14 +134,14 @@ def set_fit():
             model_summary = app.Model["algo"].summary()
             if "version" in model_summary:
                 print("/fit: version info: " + str(model_summary["version"]) + "")
-            
+
     except Exception as e:
         response["message"] += 'unable to load algo code from module. Ended with exception: ' + str(e)
         return json.dumps(response)
 
     # 5. init model from algo module
     try:
-        app.Model["model"] = app.Model["algo"].init(app.Model["df"],app.Model["meta"])
+        app.Model["model"] = app.Model["algo"].init(app.Model["df"], app.Model["meta"])
         print("/fit: " + str(app.Model["model"]) + "")
         model_summary = app.Model["algo"].summary(app.Model["model"])
         if "summary" in model_summary:
@@ -145,8 +150,7 @@ def set_fit():
         response["message"] += 'unable to initialize module. Ended with exception: ' + str(e)
         return json.dumps(response)
 
-    
-    # 6. fit model 
+    # 6. fit model
     try:
         app.Model["fit_info"] = app.Model["algo"].fit(app.Model["model"], app.Model["df"], app.Model["meta"])
         print("/fit: " + str(app.Model["fit_info"]) + "")
@@ -164,17 +168,16 @@ def set_fit():
         response["message"] += 'unable to save model. Ended with exception: ' + str(e)
         return json.dumps(response)
 
-    
-    # 8. apply model 
+    # 8. apply model
     try:
         df_result = pd.DataFrame(app.Model["algo"].apply(app.Model["model"], app.Model["df"], app.Model["meta"]))
         print("/fit: returned result dataframe with shape " + str(df_result.shape) + "")
     except Exception as e:
         response["message"] += 'unable to apply model. Ended with exception: ' + str(e)
         return json.dumps(response)
-    
+
     response["results"] = df_result.to_csv(index=False)
-    
+
     # end with a successful response
     response["status"] = "success"
     response["message"] = "/fit done successfully"
@@ -182,7 +185,7 @@ def set_fit():
 
 
 # -------------------------------------------------------------------------------
-# fit routine 
+# fit routine
 # expects json object { "data" : "<string of csv serialized pandas dataframe>", "meta" : {<json dict object for parameters>}}
 @app.route('/apply', methods=['POST'])
 def set_apply():
@@ -199,10 +202,11 @@ def set_apply():
         app.Model["meta"] = dp["meta"]
         print("/apply: meta info: ", str(app.Model["meta"]))
     except Exception as e:
-        response["message"] += 'unable to parse json from POST data. Provide a JSON object with structure { "data" : "<string of csv serialized pandas dataframe>", "meta" : {<json dict object for parameters>}}. Ended with exception: ' + str(e)
+        response["message"] += 'unable to parse json from POST data. Provide a JSON object with structure { "data" : "<string of csv serialized pandas dataframe>", "meta" : {<json dict object for parameters>}}. Ended with exception: ' + str(
+            e)
         return json.dumps(response)
 
-    # 2. convert to dataframe 
+    # 2. convert to dataframe
     try:
         # TODO check with compression option and chunked mode
         # FIX for tensorflow-gpu image does not have compat StringIO
@@ -226,8 +230,7 @@ def set_apply():
 
     if "algo" in app.Model:
         del(app.Model["algo"])
-    
-    
+
     # 3. check if model is initialized and load if not
     if "algo" not in app.Model:
         try:
@@ -243,7 +246,7 @@ def set_apply():
         except Exception as e:
             response["message"] += 'unable to initialize module. Ended with exception: ' + str(e)
             return json.dumps(response)
-    
+
     # 3. apply model
     if "algo" in app.Model:
         # TODO check if same algo and model name otherwise hard load by default
@@ -253,20 +256,19 @@ def set_apply():
         except Exception as e:
             response["message"] += 'unable to apply model. Ended with exception: ' + str(e)
             return json.dumps(response)
-    
+
     response["results"] = df_result.to_csv(index=False)
-    
+
     # end with a successful response
     response["status"] = "success"
     response["message"] = "/apply done successfully"
     return json.dumps(response)
 
 
-
 # -------------------------------------------------------------------------------
 # get a summary of the last object or an object with the posted options
 @app.route('/summary', methods=['GET'])
-def get_summary():    
+def get_summary():
     return_object = {
         "app": "Deep Learning Toolkit for Splunk",
         "version": "3.2.0",
@@ -280,12 +282,16 @@ def get_summary():
 
 # -------------------------------------------------------------------------------
 # get a general info on our endpoint
+
+
 @app.route('/', methods=['GET'])
 def get_info():
     return get_summary()
 
-code_module_path ="/srv/notebooks/algo.ipynb"
-code_version_path ="/srv/notebooks/algo.ipynb.version"
+
+code_module_path = "/srv/notebooks/algo.ipynb"
+code_version_path = "/srv/notebooks/algo.ipynb.version"
+
 
 @app.route('/notebook', methods=['GET', 'PUT'])
 def notebook_code():
@@ -297,56 +303,35 @@ def notebook_code():
             f.write(code)
         with open(code_version_path, "w") as f:
             f.write(version)
-        return json.dumps({})
+
+        model = {
+            "type": "notebook",
+            "content": json.loads(code),
+        }
+        import jupyter_notebook_conversion
+        python_code = jupyter_notebook_conversion.convert(model, code_module_path)
+
+        response = Response(python_code)
+        return response
     if request.method == 'GET':
         try:
             with open(code_module_path, 'r') as f:
                 code = f.read()
         except FileNotFoundError:
-            code = None
+            code = ""
         try:
             with open(code_version_path, 'r') as f:
                 version = f.read()
         except FileNotFoundError:
-            version = 0
-        if code is None:
-            return '', http.HTTPStatus.NOT_FOUND
+            version = None
         response = Response(code)
-        response.headers['X-Notebook-Version'] = "%s" % version
+        if version != None:
+            response.headers['X-Notebook-Version'] = "%s" % version
         return response
 
-deployment_module_path ="/srv/app/model/algo.py"
-deployment_version_path ="/srv/app/model/algo.py.version"
-
-@app.route('/code', methods=['GET', 'PUT'])
-def deployment_code():
-    if request.method == 'PUT':
-        version = request.headers['X-Code-Version']
-        code = request.data.decode()
-        with open(deployment_module_path, "w") as f:
-            f.write(code)
-        with open(deployment_version_path, "w") as f:
-            f.write(version)
-        return json.dumps({})
-    if request.method == 'GET':
-        try:
-            with open(deployment_module_path, 'r') as f:
-                code = f.read()
-        except FileNotFoundError:
-            code = None
-        try:
-            with open(deployment_version_path, 'r') as f:
-                version = f.read()
-        except FileNotFoundError:
-            version = 0
-        if code is None:
-            return '', http.HTTPStatus.NOT_FOUND
-        response = Response(code)
-        response.headers['X-Code-Version'] = "%s" % version
-        return response
 
 # -------------------------------------------------------------------------------
 # python entry point to run the flask app
 if __name__ == "__main__":
     serve(app, host="0.0.0.0", port=5000)
-    #app.run(ssl_context='adhoc')
+    # app.run(ssl_context='adhoc')

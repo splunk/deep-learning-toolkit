@@ -6,7 +6,6 @@ from dltk.core import execution
 from dltk.connector.kubernetes import KubernetesDeployment
 from kubernetes import client as kubernetes_client
 from dltk.core.deployment import status as deployment_status, UserFriendlyError
-import logging
 
 
 __all__ = ["BaseDeployment"]
@@ -73,7 +72,6 @@ class BaseDeployment(KubernetesDeployment):
                 "api_url": api_url,
             }
             self.sync_source_code(api_url)
-            self.sync_deployment_code(api_url)
 
     def deploy_base_volume_claim(self):
         return self.deploy_volume_claim(
@@ -168,73 +166,43 @@ class BaseDeployment(KubernetesDeployment):
         try:
             download_request = urllib.request.Request(url, method="GET")
             download_response = urllib.request.urlopen(download_request, timeout=7)
-            notebook_version = int(download_response.getheader("X-Notebook-Version"))
-            if notebook_version is None:
-                raise Exception("Did not receive notebook version")
-            notebook_code = download_response.read().decode()
+            container_notebook_version_string = download_response.getheader("X-Notebook-Version")
+            if container_notebook_version_string is None:
+                remote_notebook_version = -1
+            else:
+                remote_notebook_version = int(container_notebook_version_string)
+            remote_notebook_code = download_response.read().decode()
         except http.client.RemoteDisconnected as e:
             if self.status == deployment_status.STATUS_DEPLOYING:
                 raise deployment_status.StillDeploying("Waiting for connection")
             raise deployment_status.DeploymentError("Could not connect: %s" % e)
         except urllib.error.HTTPError as e:
-            if e.code != 404:
-                raise Exception("downloading notebook source failed with %s" % e.code)
-            notebook_version = -1
-            notebook_code = ""
-        if notebook_version > self.algorithm.source_code_version:
+            if e.code != 404 and e.code != 503 and e.code != 502 and e.code != 504:
+                raise Exception("downloading notebook source failed with code %s" % e.code)
+            raise deployment_status.StillDeploying("Waiting for connection to container")
+        if remote_notebook_version > self.algorithm.source_code_version:
             self.algorithm.update_source_code(
-                notebook_code,
-                notebook_version,
+                remote_notebook_code,
+                remote_notebook_version,
             )
-            logging.info("Received and stored updated source code (version %s)" % notebook_version)
-        if notebook_version < self.algorithm.source_code_version:
-            notebook_data = self.algorithm.source_code.encode()
+            self.logger.info("Received and stored updated source code (version %s)" % remote_notebook_version)
+        if remote_notebook_version < self.algorithm.source_code_version:
+            local_notebook_data = self.algorithm.source_code.encode()
             upload_request = urllib.request.Request(
                 url,
-                data=notebook_data,
+                data=local_notebook_data,
                 method="PUT",
                 headers={
                     "X-Notebook-Version": self.algorithm.source_code_version,
                     "Content-Type": "application/octet-stream",
                 }
             )
-            urllib.request.urlopen(upload_request)
-            logging.info("Sent source code (version %s)" % self.algorithm.source_code_version)
-
-    def sync_deployment_code(self, url):
-        url = urllib.parse.urljoin(url, "code")
-        try:
-            download_request = urllib.request.Request(url, method="GET")
-            download_response = urllib.request.urlopen(download_request, timeout=7)
-            version = int(download_response.getheader("X-Code-Version"))
-            if version is None:
-                raise Exception("Did not receive code version")
-            deployment_code = download_response.read().decode()
-        except http.client.RemoteDisconnected as e:
-            if self.status == deployment_status.STATUS_DEPLOYING:
-                raise deployment_status.StillDeploying("Waiting for connection")
-            raise deployment_status.DeploymentError("Could not connect: %s" % e)
-        except urllib.error.HTTPError as e:
-            if e.code != 404:
-                raise Exception("downloading code deployment failed with %s" % e.code)
-            version = -1
-            deployment_code = ""
-        if version > self.algorithm.deployment_code_version:
-            self.algorithm.update_deployment_code(
-                deployment_code,
-                version,
-            )
-            logging.info("Received and stored updated deployment code (version %s)" % version)
-        if version < self.algorithm.deployment_code_version:
-            data = self.algorithm.deployment_code.encode()
-            upload_request = urllib.request.Request(
-                url,
-                data=data,
-                method="PUT",
-                headers={
-                    "X-Code-Version": self.algorithm.deployment_code_version,
-                    "Content-Type": "application/octet-stream",
-                }
-            )
-            urllib.request.urlopen(upload_request)
-            logging.info("Sent deployment code (version %s)" % self.algorithm.deployment_code_version)
+            try:
+                upload_response = urllib.request.urlopen(upload_request)
+                self.logger.info("Sent source code (version %s)" % self.algorithm.source_code_version)
+                python_code = upload_response.read().decode()
+                #self.logger.info("Resulting python code:\n%s" % python_code)
+            except urllib.error.HTTPError as e:
+                if e.code != 404 and e.code != 503 and e.code != 502 and e.code != 504:
+                    raise Exception("Error uploading sourcecode: %s" % e.code)
+                raise deployment_status.StillDeploying("Waiting for connection to container")

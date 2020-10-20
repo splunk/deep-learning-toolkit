@@ -312,6 +312,7 @@ class ExecutionCommand(object):
                         ', '.join(traceback.format_exception_only(type(e), e))
                     ))
 
+        # https://community.splunk.com/t5/Splunk-Search/Metadata-fields-of-custom-search-command/m-p/300360
         # mltk fit: EVENTS
         # mltk apply: streaming or stateful
         info = {

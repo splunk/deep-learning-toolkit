@@ -5,7 +5,7 @@
 The following steps describe how to create a new DLTK *Environment*:
 
 1. Open the Splunk web interface
-2. Open the *Deep Learning Toolkip for Splunk* app
+2. Open the *Deep Learning Toolkit for Splunk* app
 3. Click on *Configuration* and then *Environments* in the navigation bar
 4. Click the *Create New Environment* button (upper right corner of the dashboard)
 5. Enter a name for the new *Environment*

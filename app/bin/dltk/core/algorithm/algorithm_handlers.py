@@ -100,11 +100,14 @@ class AlgorithmsHandler(BaseRestHandler):
                 "category": algorithm.category,
             }
             status = []
+            status_message = []
             editor = []
             for d in deployment.get_all_for_algorithm(self.splunk, algorithm.name):
                 status.append(d.status)
+                status_message.append(d.status_message)
                 editor.append(d.editor_url)
             info["status"] = status
+            info["status_message"] = status_message
             info["editor"] = editor
             info["can_be_deleted"] = True
             if deployed_only and not len(status) > 0:

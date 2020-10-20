@@ -12,7 +12,7 @@
           data-basequery='index=_internal sourcetype=dltk "begin command handler" OR "command handler ended" 
 | append 
     [| rest splunk_server=local "services/dltk/algorithms" 
-    | eval algorithm=name 
+    | eval algorithm=name, status = status + ":" + status_message 
     | eval chunk_size=0] 
 | stats first(description) as Description first(category) as Category, first(runtime) as Runtime sparkline(sum(chunk_size)) as Activity first(status) as Status first(editor) as Actions by algorithm | rename algorithm as Algorithm | where isnotnull(Runtime) | eval Activity=if(isnull(Status),null(),Activity)' 
           data-rowdeloymentsquery="| rest splunk_server=local services/dltk/deployments algorithm=&quot;$algorithm$&quot; | eval togglestatus = status | rename editor_url as Actions,splunk_server as Name, environment as Environment, status as Status | table Environment, Status, Actions"

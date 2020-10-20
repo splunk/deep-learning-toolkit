@@ -14,6 +14,10 @@ define([
                     title : 'Not Set'
                 }
             },
+            _disableToggleButton:function(e){
+                let $button = $(e.currentTarget);
+                $button.attr('disabled', $button.attr('disabled')=="disabled");
+            },
             events: {
                 'click .close,.cancel': function(e){
                     var _self = this;
@@ -28,18 +32,19 @@ define([
                 },
                 'click .btn-primary': async function(e){
                     e.preventDefault();
+                    this._disableToggleButton(e);
                     $('.error-container').hide('fast');
                     var _self = this;
                     this.options.flashMessages.flashMsgCollection.reset();
-
+                    var $e = e;
                     if (this.model && typeof(this.options.actionhandler)=="function"){
                         try {
-                            $('.info-container').show('fast');
+                            /*$('.info-container').show('fast');
                             this.options.flashMessages.flashMsgCollection.add({
                                 key: 'token-info',
                                 type: 'info',
                                 html: _.escape(_("Saving..... Please be patient.").t())
-                            });
+                            });*/
                             if (true == await this.options.actionhandler.call(null, e, _self, mvc)){
                                 _self.options.flashMessages.flashMsgCollection.reset();
                                 _self.hide();
@@ -54,9 +59,11 @@ define([
                                 type: 'error',
                                 html: _.escape(_(JSON.stringify(e.data!=false ? e.data : e.message)).t())
                             });
+                            this._disableToggleButton($e);
                             return false;
                         }
                     }
+                    this._disableToggleButton(e);
                 },
             },
             initialize: function(options) {

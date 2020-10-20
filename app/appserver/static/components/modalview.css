@@ -97,7 +97,7 @@ a {
 
 .menu-click  {
     color: #3e3e3e;
-    float: right;
+    float: left;
 }
 
 .results-table tr.expanded-row td, .results-table tr.expanded-content-row td  {

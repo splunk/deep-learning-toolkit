@@ -10,6 +10,9 @@
     padding: 0px;
 }
 
+.ConditionalExtras > i::before{
+    cursor: pointer;
+}
 
 #algotable, #algotable tbody {
     font-family: inherit !important;

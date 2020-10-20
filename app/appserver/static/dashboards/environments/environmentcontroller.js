@@ -11,7 +11,7 @@ define([
    '../fieldset/newenvironmentfields',
    '../fieldset/newdeploymentfields',
    '../fieldset/newmethodfields',
-   '../fieldset/editparameterfields'
+   '../fieldset/editenvparameterfields'
 ], function(
         _, 
         Backbone, 
@@ -28,6 +28,7 @@ define([
         EditParameterFields
     ){
     var BUTTON_OK = '<a role="button" href="#" class="btn btn-primary modal-btn-primary btn-save">Ok</a>';
+    var _isBusy = false;
     return BaseController.extend({
         initialize: function(options) {
             BaseController.prototype.initialize.apply(this, arguments);
@@ -75,6 +76,7 @@ define([
                     },
                     savedhandler: async function (el, m) {
                         $Modal.children.createDialog.changedFields = {};
+                        m.Components.get("environmentstable") && m.Components.get("environmentstable").options.managerid && m.Components.get(m.Components.get("environmentstable").options.managerid).startSearch({refresh:true});
                         el.hide();
                     },
                     fieldchangehandler: async function (evt) {
@@ -103,6 +105,10 @@ define([
             $Modal.children.createDialog.show();
         },
         edit_environment : async function(element,model){
+            if (_isBusy) {
+                return;
+            }
+            _isBusy = true;
             var $Modal = element;
             var deployments = {};
             var algorithm_params = [];
@@ -165,6 +171,7 @@ define([
                     },
                     savedhandler: async function (el, m) {
                         $Modal.children.createDialog.changedFields = {};
+                        m.Components.get("environmentstable") && m.Components.get("environmentstable").options.managerid && m.Components.get(m.Components.get("environmentstable").options.managerid).startSearch({refresh:true});
                         el.hide();
                     },
                     fieldchangehandler: async function (evt) {
@@ -184,6 +191,7 @@ define([
             $Modal.children.createDialog.changedFields = {};
             $("body").append($Modal.children.createDialog.render().el), 
             $Modal.children.createDialog.show();
+            _isBusy = false;
         },
         delete_environment : async function(e,model){
             e.children.deleteDialog = new ModalConfirm({
@@ -196,6 +204,7 @@ define([
                     await rest.createRestEndpoint().delAsync(`environments`, {
                         name : model.entityname, environment: model.environment
                     });
+                    m.Components.get("environmentstable") && m.Components.get("environmentstable").options.managerid && m.Components.get(m.Components.get("environmentstable").options.managerid).startSearch({refresh:true});
                     return true;
                 }
             }),

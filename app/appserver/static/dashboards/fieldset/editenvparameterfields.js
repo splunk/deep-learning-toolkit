@@ -20,6 +20,6 @@ define([
             querylabel: "name",
             query_value: "name",
             readonly: true
-        }
+        },
     ];
 });

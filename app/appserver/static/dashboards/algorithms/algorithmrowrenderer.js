@@ -10,6 +10,7 @@ define([
 ], function(_,TableView,SearchManager,ChartView,StatusCellRenderer,EditorCellRenderer, MenuCellRenderer){   
     return TableView.BaseRowExpansionRenderer.extend({
         canRender: function(rowData) {
+            window.lastRowOpened = rowData;
             return true;
         },
         createDeploymentSearchManager: function(algorithm){

@@ -71,10 +71,12 @@ define([
                 },
                 'click .save': async function(e){
                     $('.error-container').hide();
+                    this._disableToggleButton(e);
                     e.preventDefault();
                     var algoparams = [];
                     var deploymentparams = [];
-                    var _self = this;
+                    var otherparams = [];
+                    var _self = this, $e = e;
                     _self.options.flashMessages.flashMsgCollection.reset();
                     
                     _.each($('.pickervalue, .textvalue'),function(child){
@@ -92,10 +94,15 @@ define([
                             var state = mvc.Components.get(child.id).getState();
                             (state.value || state.value=="") && (algoparams[child.id] = state.value);
                             state.choices && (algoparams[child.id] = state.choices.length>0 ? state.value : null);
+                        } else {
+                            var state = mvc.Components.get(child.id).getState();
+                            (state.value || state.value=="") && (otherparams[child.id] = state.value);
+                            state.choices && (otherparams[child.id] = state.choices.length>0 ? state.value : null);
                         }
                     });
                     
                     if (_self.options.flashMessages.flashMsgCollection.length > 0){
+                        this._disableToggleButton($e);
                         return;
                     }
                     if (this.model && typeof(this.model.savehandler)=="function"){
@@ -106,7 +113,7 @@ define([
                                 type: 'info',
                                 html: _.escape(_("Saving..... Please be patient.").t())
                             });
-                            if (false == await this.model.savehandler.call(null, {algoparams:algoparams, deploymentparams:deploymentparams}, this)){
+                            if (false == await this.model.savehandler.call(null, {algoparams:algoparams, deploymentparams:deploymentparams, otherparams:otherparams}, this)){
                                 return;
                             }
                         } catch (e){
@@ -119,11 +126,13 @@ define([
                                 type: 'error',
                                 html: _.escape(_(JSON.stringify(e.data!=false ? e.data : e.message)).t())
                             });
+                            this._disableToggleButton($e);
                             return;
                         }
                     }
                     _self.options.flashMessages.flashMsgCollection.reset();
                     this.model.savedhandler && this.model.savedhandler.call(null, _self, mvc);
+                    this._disableToggleButton(e);
                 }
             },
             startListening: function() {
@@ -185,6 +194,7 @@ define([
                 this.$(".info-container").append(this.options.infoMessages.render().el);
                 this.startListening();
                 this._addfields(this.model.basefields,'base');
+                this.$('input').first().focus();
                 return this.children.entityTitle && $form.append(this.children.entityTitle.render().el), this;
             },
             headerTemplate:'<div class="error-container"></div><div class="info-container"></div>',

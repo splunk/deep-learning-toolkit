@@ -116,11 +116,11 @@ define([
                                 child.control_control = new TextInputView({
                                     id: child.id,
                                     label: _(child.mandatory ? child.label+" *":child.label).t(),
-                                    value: child.value ?? (child.default ?? '' ),
+                                    value: child.value,
                                     disabled : child.readonly === true,
                                     className: child.mandatory ? "textvalue mandatory":"textvalue",
                                     model: child.fieldmodel,
-                                    defaultvalue: child.default
+                                    defaultvalue: child.default ?? ''
                                 });
                                 break;
                         }
@@ -139,6 +139,11 @@ define([
                 options.model && (this.model = options.model);
       
                 this.model.children && (this.options.model.children = this.updatefieldmodel(this.model.children));
+            },
+            _disableToggleButton:function(e){
+                let $button = $(e.currentTarget);
+                let isDisabled = $button.attr('disabled')=="disabled";
+                $button.attr('disabled', !isDisabled);
             },
             events: {
                 'click .revert': async function(e){
@@ -171,25 +176,30 @@ define([
                     }
                 },
                 'click .save': async function(e){
+                    this._disableToggleButton(e);
                     $('.error-container').hide();
                     e.preventDefault();
                     var returnvalue = {};
                     var _self = this;
+                    var $e = e;
                     _self.options.flashMessages.flashMsgCollection.reset();
                     _.each($('.pickervalue,.textvalue'),function(child){
                         let $el = mvc.Components.get(child.id), tag = null;
-                        $el.options.model && $el.options.model.options.tag && (tag = $el.options.model.options.tag);
-                        if (!returnvalue[tag]){
-                            returnvalue[tag] = [];
-                        }
-                        returnvalue[tag][child.id] = $el.options.model.get_value();
-                        var validationresult = $el.options.model.validate();
-                        if ( validationresult !== true){
-                            $('.error-container').show('fast');
-                            _self.options.flashMessages.flashMsgCollection.add(validationresult);
+                        if ($el.options.model){
+                            $el.options.model.options.tag && (tag = $el.options.model.options.tag);
+                            if (!returnvalue[tag]){
+                                returnvalue[tag] = [];
+                            }
+                            returnvalue[tag][child.id] = $el.options.model.get_value();
+                            var validationresult = $el.options.model.validate();
+                            if ( validationresult !== true){
+                                $('.error-container').show('fast');
+                                _self.options.flashMessages.flashMsgCollection.add(validationresult);
+                            }
                         }
                     });
                     if (_self.options.flashMessages.flashMsgCollection.length > 0){
+                        this._disableToggleButton($e);
                         return;
                     }
                     if (this.model && typeof(this.model.savehandler)=="function"){
@@ -213,11 +223,13 @@ define([
                                 type: 'error',
                                 html: _.escape(_(JSON.stringify(e.data!=false ? e.data : e.message)??'General error.').t())
                             });
+                            this._disableToggleButton($e);
                             return;
                         }
                     }
                     _self.options.flashMessages.flashMsgCollection.reset();
                     this.model.savedhandler && this.model.savedhandler.call(null, _self, mvc);
+                    this._disableToggleButton(e);
                 }
             },
             removefields: function(children, tag=""){
@@ -249,9 +261,11 @@ define([
                 var $unimportantForm = this.$(".unimportant-form");
                 var $baseForm = this.$(".base-form");
                 var $container = this.$("."+tag);
+                var hasUnimportantFields = false;
                 _.each(children, function(child) {
                     var element = $unimportantForm;
                     child.tag = tag;
+                    !hasUnimportantFields && child.important === false && (hasUnimportantFields = true);
                     switch(tag){
                         case 'base':
                                 element = $baseForm;
@@ -275,6 +289,7 @@ define([
                         element.append(child.section_control);
                     }
                 });
+                !hasUnimportantFields && $('.advanced-settings').hide();
                 return children;
 
             },
@@ -317,6 +332,9 @@ define([
                                     <div class="important-form form-horizontal"></div>\
                                 </div>\
                                 <div class="card environment">\
+                                    <div class="important-form form-horizontal"></div>\
+                                </div>\
+                                <div class="card connector">\
                                     <div class="important-form form-horizontal"></div>\
                                 </div>\
                                 <div class="card runtime advanced-settings">\

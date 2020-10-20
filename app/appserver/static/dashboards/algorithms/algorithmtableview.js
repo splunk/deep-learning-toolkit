@@ -43,6 +43,7 @@ define([
                 ),
             cellExtrasRenderer = new StatusCellRenderer(),
             cellEditorRenderer = new EditorCellRenderer({typestring:'algorithms', tableview: _self});
+            
             this.addRowExpansionRenderer(tableRowRender);
             this.addCellRenderer(cellExtrasRenderer);
             this.addCellRenderer(cellEditorRenderer);
@@ -128,7 +129,7 @@ define([
                 preview: false,
                 cache: true,
                 search: this.options.basequery,
-                refresh: '11s',
+                refresh: '100s',
                 earliest_time: "-24h@h",
                 latest_time: "now",
                 //
@@ -147,6 +148,14 @@ define([
             //this.children.searchmanager.settings.set("refreshDisplay","progressbar");
             //this.children.tableview.settings.set("refreshType","none");
             this.children.tableview.settings.set("refreshDisplay","progressbar");
+            //this.listenTo(this.children.searchmanager, "search:done", this._onSearchDone);
+            //this.listenTo(this.children.tableview, "change:fields", this._onSearchRefresh);
+        },
+        _onSearchDone: function () {
+            debugger;
+        },
+        _onSearchRefresh: function () {
+            debugger;
         },
         _triggerControllerEvent: function () {
             this.model.controller.trigger.apply(this.model.controller, arguments);

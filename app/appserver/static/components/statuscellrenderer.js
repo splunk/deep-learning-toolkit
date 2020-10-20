@@ -32,6 +32,9 @@ define([
                 return 'empty';
 
             var status = JSON.stringify(data);
+            if (status.indexOf(":")>-1){
+                status = status.split(":")[0]
+            }
             if (status.indexOf("deployed")>-1){
                 return 'deployed';
             }
@@ -46,7 +49,12 @@ define([
         render: function($td, cellData) {
             var icon = 'question';
             var color = 'lightgray';
-            var filteredValue = this.filterStats(cellData.value);
+            var unfilteredValue, unfilteredMessage;
+            if (cellData.value && cellData.value.indexOf(":")>-1){
+                unfilteredValue = cellData.value.split(":")[0];
+                unfilteredMessage = cellData.value.split(":")[1];
+            }
+            var filteredValue = this.filterStats(unfilteredValue ?? cellData.value);
             if (!filteredValue || filteredValue === ""){
                 filteredValue = "empty";
             }
@@ -60,12 +68,16 @@ define([
                 spinner.$el.show();
                 spinner.start();
             } else {
-                $td.addClass('icon').html(_.template('<i style="color:<%-color%>" class="<%-icon%> <%- value %>" title="<%- value %>"></i>', {
+                $td.addClass('icon').html(_.template('<i style="color:<%-color%>" class="<%-icon%> <%- value %>" title="<%- value %>" data-entityname="<%- name %>"></i>', {
                     icon: icon,
                     color: color,
-                    value: cellData.value
+                    value: (unfilteredMessage && unfilteredMessage!="") ? unfilteredMessage : filteredValue,
+                    name: arguments.callee.caller.arguments[2][0].value
                 }));
-                
+                $td.click(function(el){
+                    var algoname = el.currentTarget.children[0].dataset.entityname;
+                    window.open(`search?q=index=_internal sourcetype=dltk "${algoname}"&display.page.search.mode=smart&earliest=-1h%40h&latest=now`)
+                });
             }
             $td.attr("width","60");
         }

@@ -11,7 +11,7 @@ define([
    '../fieldset/newalgorithmfields',
    '../fieldset/newdeploymentfields',
    '../fieldset/newmethodfields',
-   '../fieldset/editparameterfields'
+   '../fieldset/editalgoparameterfields'
 ], function(
         _, 
         Backbone, 
@@ -28,6 +28,7 @@ define([
         EditParameterFields
     ){
     var BUTTON_OK = '<a role="button" href="#" class="btn btn-primary modal-btn-primary btn-save">Ok</a>';
+    var _isBusy = false;
     return BaseController.extend({
         initialize: function(options) {
             BaseController.prototype.initialize.apply(this, arguments);
@@ -84,6 +85,14 @@ define([
                                 }                            
                                 await rest.createRestEndpoint().postAsync(`deployments`, deployment);
                             }
+                            if (algorithm['description']||algorithm['category']){
+                                var details = {
+                                    algorithm: _.escape(_(algorithm["name"]).t()),
+                                    description: _.escape(_(algorithm["description"]??'').t()),
+                                    category: _.escape(_(algorithm["category"]??'').t()),
+                                }                            
+                                await rest.createRestEndpoint().putAsync(`algorithm_details`, details);
+                            }
                             if (p){
                                 var algoparams = {
                                     algorithm: _.escape(_(algorithm["name"]).t())
@@ -100,7 +109,7 @@ define([
                     },
                     savedhandler: async function (el, m) {
                         $Modal.children.createDialog.changedFields = {};
-                        //m.Components.get("algortihms-search") && m.Components.get("algortihms-search").startSearch();
+                        m.Components.get("algotable") && m.Components.get("algotable").options.managerid && m.Components.get(m.Components.get("algotable").options.managerid).startSearch({refresh:true});
                         el.hide();
                     },
                     fieldchangehandler: async function (evt) {
@@ -143,9 +152,10 @@ define([
             $Modal.children.createDialog.changedFields = {};
             $("body").append($Modal.children.createDialog.render().el), 
             $Modal.children.createDialog.show();
-        }, show_create_deployment : function(element,model){
+        }, 
+        show_create_deployment : function(element,model){
             var $Modal = element;
-            var fields = NewDeploymentFields;
+            var fields = JSON.parse(JSON.stringify(NewDeploymentFields));
             fields[0].value = model.entityname;
             fields[1].value = model.runtime;
             $Modal.children.createDialog = new CreateModalView({
@@ -183,7 +193,11 @@ define([
                     },
                     savedhandler: async function (el, m) {
                         $Modal.children.createDialog.changedFields = {};
-                        //m.Components.get("algortihms-search") && m.Components.get("algortihms-search").startSearch();
+                        for (var key in m.Components.attributes){
+                            if (key.indexOf("manager_")>-1){
+                                m.Components.attributes[key].startSearch({refresh:true});
+                            }
+                        }
                         el.hide();
                     },
                     fieldchangehandler: async function (evt) {
@@ -196,7 +210,10 @@ define([
                             if (!("init" in $Modal.children.createDialog.changedFields)) 
                             {
                                 $Modal.children.createDialog.removefields($('.runtime').find('.textvalue,.pickervalue'));
-                                const result = await rest.createRestEndpoint().getAsync(`algorithm_params`, { runtime: encodeURIComponent($Modal.children.createDialog.changedFields['runtime']) });
+                                const result = await rest.createRestEndpoint().getAsync(`deployment_params`, {
+                                    runtime: encodeURIComponent($Modal.children.createDialog.changedFields['runtime']),
+                                    environment: encodeURIComponent($Modal.children.createDialog.changedFields['environment'])
+                                });
                                 const fieldconfig = await rest.getResponseContents(result);
                                 var input = [];
                                 _.each(fieldconfig, function (field) {
@@ -205,17 +222,6 @@ define([
                                 $Modal.children.createDialog.addfields(input,"runtime");
                                 $Modal.children.createDialog.changedFields['init'] = 1;
                             }
-                            $Modal.children.createDialog.removefields($('.environment').find('.textvalue,.pickervalue'));
-                            const result = await rest.createRestEndpoint().getAsync(`deployment_params`, {
-                                runtime: encodeURIComponent($Modal.children.createDialog.changedFields['runtime']),
-                                environment: encodeURIComponent($Modal.children.createDialog.changedFields['environment'])
-                            });
-                            const fieldconfig = await rest.getResponseContents(result);
-                            var input = [];
-                            _.each(fieldconfig, function (field) {
-                                input.push(field);
-                            });
-                            $Modal.children.createDialog.addfields(input,"environment");
                         }
                     }
                 },
@@ -229,7 +235,7 @@ define([
         }, 
         show_create_method : function(element,model){
             var $Modal = element;
-            var fields = NewMethodFields;
+            var fields = JSON.parse(JSON.stringify(NewMethodFields));
             fields[0].value = model.entityname;
             $Modal.children.createDialog = new CreateModalView({
                 title: 'Create Method',
@@ -252,8 +258,12 @@ define([
                         return true;
                     },
                     savedhandler: async function (el, m) {
+                        for (var key in m.Components.attributes){
+                            if (key.indexOf("manager_")>-1 && key != m.Components.get("algotable").options.managerid){
+                                m.Components.attributes[key].startSearch({refresh:true});
+                            }
+                        }
                         $Modal.children.createDialog.changedFields = {};
-                        //m.Components.get("algortihms-search") && m.Components.get("algortihms-search").startSearch();
                         el.hide();
                     },
                     fieldchangehandler: async function (evt) {
@@ -262,31 +272,6 @@ define([
                         var value = evt.target.value;
                         var fieldname = evt.currentTarget.id;
                         $Modal.children.createDialog.changedFields[fieldname] = value;
-                        if ("environment" == fieldname && "runtime" in $Modal.children.createDialog.changedFields) {
-                            if (!("init" in $Modal.children.createDialog.changedFields)) 
-                            {
-                                $Modal.children.createDialog.removefields($('.runtime').find('.textvalue,.pickervalue'));
-                                const result = await rest.createRestEndpoint().getAsync(`algorithm_params`, { runtime: encodeURIComponent($Modal.children.createDialog.changedFields['runtime']) });
-                                const fieldconfig = await rest.getResponseContents(result);
-                                var input = [];
-                                _.each(fieldconfig, function (field) {
-                                    input.push(field);
-                                });
-                                $Modal.children.createDialog.addfields(input,"runtime");
-                                $Modal.children.createDialog.changedFields['init'] = 1;
-                            }
-                            $Modal.children.createDialog.removefields($('.environment').find('.textvalue,.pickervalue'));
-                            const result = await rest.createRestEndpoint().getAsync(`deployment_params`, {
-                                runtime: encodeURIComponent($Modal.children.createDialog.changedFields['runtime']),
-                                environment: encodeURIComponent($Modal.children.createDialog.changedFields['environment'])
-                            });
-                            const fieldconfig = await rest.getResponseContents(result);
-                            var input = [];
-                            _.each(fieldconfig, function (field) {
-                                input.push(field);
-                            });
-                            $Modal.children.createDialog.addfields(input,"environment");
-                        }
                     }
                 },
                 onHiddenRemove: !0,
@@ -305,7 +290,7 @@ define([
                 },
                 actionhandler : async function(e, modal, m){
                     await rest.createRestEndpoint().delAsync(`algorithms`,{name: model.entityname});
-                    //m.Components.get("algortihms-search") && m.Components.get("algortihms-search").startSearch();
+                    m.Components.get("algotable") && m.Components.get("algotable").options.managerid && m.Components.get(m.Components.get("algotable").options.managerid).startSearch({refresh:true});
                     return true;
                 }
             }),
@@ -313,10 +298,14 @@ define([
             e.children.deleteDialog.show();
         },
         edit_parameters : async function(element,model){
+            if (_isBusy) {
+                return;
+            }
+            _isBusy = true;
             var $Modal = element;
             var deployments = {};
             var algorithm_params = [];
-            var deployment_params = [];
+            var detail_params = [];
             var children = [];
             try 
             {
@@ -348,11 +337,21 @@ define([
                 return;
             }
             var fields = EditParameterFields;
-            fields[0].value = model.entityname;
-            fields[1].value = model.runtime;
+            try 
+            {
+                result = await rest.createRestEndpoint().getAsync(`algorithm_details`, { algorithm: model.entityname});
+                if (!result.data || !result.data.entry || !result.data.entry[0] || !result.data.entry[0].content){
+                    return;
+                }
+                fields[0].value = result.data.entry[0].content.description;
+                fields[1].value = result.data.entry[0].content.category;
+            } catch (ex) {
+                console.log(JSON.stringify(ex));
+                return;
+            }
             const BUTTON_UPDATE = '<a role="button" href="#" class="btn btn-primary modal-btn-primary btn-save">Update</a>';
             $Modal.children.createDialog = new ModalEdit({
-                title: 'Settings',
+                title: `Settings for '${model.entityname}'`,
                 primarybutton: BUTTON_UPDATE,
                 changedFields: {},
                 model: {
@@ -366,13 +365,22 @@ define([
                         var algorithm = {};
                         var _m = {algorithm : model.entityname};
                         for (var subkey in r.algoparams){
-                            if (typeof(r.algoparams[subkey])=='function')
+                            if (typeof(r.algoparams[subkey])=='function'){
                                 continue;
-
+                            }
                             _m[subkey]=r.algoparams[subkey];
                         }
                         await rest.createRestEndpoint().putAsync(`algorithm_params`, _m);
                         
+                        if (r.otherparams){
+                            var details = {
+                                algorithm: model.entityname,
+                                description: _.escape(_(r.otherparams["description"]??'').t()),
+                                category: _.escape(_(r.otherparams["category"]??'').t()),
+                            }                            
+                            await rest.createRestEndpoint().putAsync(`algorithm_details`, details);
+                        }
+
                         for (var key in r.deploymentparams){
                             if (typeof(r.deploymentparams[key])=='function'){
                                 continue;
@@ -388,7 +396,7 @@ define([
                     },
                     savedhandler: async function (el, m) {
                         $Modal.children.createDialog.changedFields = {};
-                        //m.Components.get("algortihms-search") && m.Components.get("algortihms-search").startSearch();
+                        m.Components.get("algotable") && m.Components.get("algotable").options.managerid && m.Components.get(m.Components.get("algotable").options.managerid).startSearch({refresh:true});
                         el.hide();
                     },
                     fieldchangehandler: async function (evt) {
@@ -408,6 +416,7 @@ define([
             $Modal.children.createDialog.changedFields = {};
             $("body").append($Modal.children.createDialog.render().el), 
             $Modal.children.createDialog.show();
+            _isBusy = false;
         },
         delete_deployment : async function(e,model){
             e.children.deleteDialog = new ModalConfirm({
@@ -420,7 +429,11 @@ define([
                     await rest.createRestEndpoint().delAsync(`deployments`, {
                         algorithm : model.entityname,environment: model.environment
                     });
-                    //m.Components.get("algortihms-search") && m.Components.get("algortihms-search").startSearch();
+                    for (var key in m.Components.attributes){
+                        if (key.indexOf("manager_")>-1){
+                            m.Components.attributes[key].startSearch({refresh:true});
+                        }
+                    }
                     return true;
                 }
             }),
@@ -439,7 +452,11 @@ define([
                         disabled: model.enabledisable == "disable",
                         algorithm : model.entityname,environment: model.environment
                     });
-                    //m.Components.get("algortihms-search") && m.Components.get("algortihms-search").startSearch();
+                    for (var key in m.Components.attributes){
+                        if (key.indexOf("manager_")>-1 && key != m.Components.get("algotable").options.managerid){
+                            m.Components.attributes[key].startSearch({refresh:true});
+                        }
+                    }
                     return true;
                 }
             }),
@@ -459,7 +476,12 @@ define([
                             environment: model.environment,
                             restart_required: true,
                         });
-                        //m.Components.get("algortihms-search") && m.Components.get("algortihms-search").startSearch();
+                        for (var key in m.Components.attributes){
+                            if (key.indexOf("manager_")>-1 && key != m.Components.get("algotable").options.managerid){
+                                m.Components.attributes[key].startSearch({refresh:true});
+                            }
+                        }
+                       
                     return true;
                 }
             }),
@@ -475,7 +497,11 @@ define([
                 },
                 actionhandler : async function(e, modal, m){
                     await rest.createRestEndpoint().delAsync(`algorithm_methods`,{algorithm: model.entityname, name: model.method});
-                    //m.Components.get("algortihms-search") && m.Components.get("algortihms-search").startSearch();
+                    for (var key in m.Components.attributes){
+                        if (key.indexOf("manager_")>-1 && key != m.Components.get("algotable").options.managerid){
+                            m.Components.attributes[key].startSearch({refresh:true});
+                        }
+                    }
                     return true;
                 }
             }),

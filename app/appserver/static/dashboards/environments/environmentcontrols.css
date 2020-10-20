@@ -14,6 +14,11 @@
     font-family: inherit !important;
 }
 
+.menu-container{
+    display: inline-flex;
+    float: right;
+}
+
 .btn-pill {
     display: inline-block;
     padding: 5px 5px;

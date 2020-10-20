@@ -1,0 +1,102 @@
+<form script="plot.js">
+  <label>Correlation Matrix and Pair Plot</label>
+  <fieldset submitButton="false">
+    <input type="dropdown" token="environment">
+      <label>Environment</label>
+      <fieldForLabel>name</fieldForLabel>
+      <fieldForValue>name</fieldForValue>
+      <selectFirstChoice>true</selectFirstChoice>
+      <search>
+        <query>| rest splunk_server=local services/dltk/environments | search connector=kubernetes | table name</query>
+        <earliest>-24h@h</earliest>
+        <latest>now</latest>
+      </search>
+    </input>
+  </fieldset>
+  <row depends="$fit_finalized$">
+    <panel>
+      <html>
+        <div>
+          <img width="800px" height="800px" id="plot_matrix" src=""/>
+        </div>
+      </html>
+    </panel>
+    <panel>
+      <html>
+        <div>
+          <img width="800px" height="800px" id="plot_pairplot" src=""/>
+        </div>
+      </html>
+    </panel>
+  </row>
+  <row>
+    <panel>
+      <title>Correlation Matrix Results</title>
+      <table>
+        <search>
+          <done>
+            <condition match="$job.resultCount$&gt;0">
+              <set token="fit_finalized">diabetes_correlation</set>
+            </condition>
+            <condition>
+              <unset token="fit_finalized"></unset>
+            </condition>
+          </done>
+          <query>| inputlookup diabetes.csv
+| compute algorithm="Correlation Matrix" environment="$environment$" method="fit" plot="matrix,pairplot" model_name="diabetes_correlation" fields="response,BMI,age,blood_pressure,diabetes_pedigree,glucose_concentration,number_pregnant,serum_insulin,skin_thickness" feature_variables="response,BMI,age,blood_pressure,diabetes_pedigree,glucose_concentration,number_pregnant,serum_insulin,skin_thickness"
+| rename predicted_* as *</query>
+          <earliest>-24h@h</earliest>
+          <latest>now</latest>
+          <sampleRatio>1</sampleRatio>
+        </search>
+        <option name="count">100</option>
+        <option name="dataOverlayMode">heatmap</option>
+        <option name="drilldown">none</option>
+        <option name="percentagesRow">false</option>
+        <option name="refresh.display">progressbar</option>
+        <option name="rowNumbers">true</option>
+        <option name="totalsRow">false</option>
+        <option name="wrap">true</option>
+      </table>
+    </panel>
+  </row>
+  <row>
+    <panel depends="$fit_finalized$">
+      <table>
+        <search>
+          <query>| makeresults count=1 
+| compute algorithm="Correlation Matrix" environment="$environment$" method="summary" model_name="$fit_finalized$" fields="response,BMI,age,blood_pressure,diabetes_pedigree,glucose_concentration,number_pregnant,serum_insulin,skin_thickness"           
+| spath input=summary output=plot path=model 
+| eval text=split(plot,", ")
+| mvexpand text
+| table text
+| rex field=text "\"b'(?&lt;plots&gt;.*)'\""
+| rex field=text "'(?&lt;token&gt;\w+)':"
+| table token plots
+| transpose 0 header_field=token
+| table plot_*</query>
+          <earliest>-24h@h</earliest>
+          <latest>now</latest>
+          <sampleRatio>1</sampleRatio>
+          <done>
+            <condition match="$job.resultCount$&gt;0">
+              <set token="plot_matrix">$result.plot_matrix$</set>
+              <set token="plot_pairplot">$result.plot_pairplot$</set>
+            </condition>
+            <condition>
+              <unset token="plot_matrix"></unset>
+              <unset token="plot_pairplot"></unset>
+            </condition>
+          </done>
+        </search>
+        <option name="count">1</option>
+        <option name="dataOverlayMode">none</option>
+        <option name="drilldown">none</option>
+        <option name="percentagesRow">false</option>
+        <option name="rowNumbers">true</option>
+        <option name="totalsRow">false</option>
+        <option name="wrap">true</option>
+      </table>
+    </panel>
+  </row>
+</form>

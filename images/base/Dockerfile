@@ -42,9 +42,6 @@ RUN python -m spacy download en_core_web_sm
 
 RUN pip install pyarrow>=0.15 vaex>=3.0.0
 
-# Install additional user libraries
-#RUN pip install ginza
-
 RUN jupyter lab build
 RUN jupyter lab clean
 

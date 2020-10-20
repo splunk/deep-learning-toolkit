@@ -69,6 +69,7 @@ class EnvironmentParamsHandler(BaseRestHandler):
             "value": get_value(name),
             "type": "text",  # "picker" "text",
             "mandatory": False,
+            "important": True,
         } for name in c.environment_param_names])
         self.send_entries(params)
 

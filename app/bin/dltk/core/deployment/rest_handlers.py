@@ -38,7 +38,7 @@ class DeploymentParamsHandler(BaseRestHandler):
             e = environment.get(self.splunk, environment_name)
             r = runtime.get(self.splunk, runtime_name)
             def get_default(name): return get_default_param(name, e, runtime=r)
-            def get_value(_): return ""
+            def get_value(_): return None
         params = [{
             "name": name,
             "label": get_label_for_name(name),
@@ -46,7 +46,7 @@ class DeploymentParamsHandler(BaseRestHandler):
             "value": get_value(name),
             "type": "text",  # "picker" "text",
             "mandatory": False,
-            "important": False,  # True if name == "executor_instance_count" else False,
+            "important": True,  # True if name == "executor_instance_count" else False,
         } for name in r.deployment_param_names]
         self.send_entries(params)
 

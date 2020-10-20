@@ -43,6 +43,7 @@ class AlgorithmParamsHandler(BaseRestHandler):
             "value": get_value(name),
             "type": "text",  # "picker" "text",
             "mandatory": False,
+            "important": True,
         } for name in r.algorithm_param_names])
         if include_deployments:
             for d in deployment.get_all_for_algorithm(self.splunk, algorithm_name):
@@ -55,6 +56,7 @@ class AlgorithmParamsHandler(BaseRestHandler):
                     "value": d.get_param(name, inherit=False),
                     "type": "text",  # "picker" "text",
                     "mandatory": False,
+                    "important": True,
                 } for name in r.deployment_param_names])
         self.send_entries(params)
 

@@ -4,7 +4,8 @@ import importlib
 __all__ = [
     "get_class",
     "get_method",
-    "is_truthy"
+    "is_truthy",
+    "get_label_for_name"
 ]
 
 
@@ -26,3 +27,9 @@ def get_method(name):
     module = importlib.import_module(module_name)
     Func = getattr(module, cls_name)
     return Func
+
+
+def get_label_for_name(name):
+    label = name.replace("_", " ")
+    label = label.title()
+    return label

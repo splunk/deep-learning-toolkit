@@ -14,6 +14,7 @@ from . get import *
 from . jobs import trigger
 from . import status
 from . params import get_default_param
+from dltk.core import get_label_for_name
 
 __all__ = [
     "DeploymentsHandler",
@@ -40,6 +41,7 @@ class DeploymentParamsHandler(BaseRestHandler):
             def get_value(_): return ""
         params = [{
             "name": name,
+            "label": get_label_for_name(name),
             "default": get_default(name),
             "value": get_value(name),
             "type": "text",  # "picker" "text",

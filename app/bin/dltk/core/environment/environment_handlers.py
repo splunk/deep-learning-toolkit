@@ -5,6 +5,7 @@ from dltk.core import connector
 from dltk.core import runtime
 from . import environment_api
 from dltk.core import is_truthy
+from dltk.core import get_label_for_name
 
 __all__ = [
     "EnvironmentsHandler",
@@ -63,6 +64,7 @@ class EnvironmentParamsHandler(BaseRestHandler):
         params = []
         params.extend([{
             "name": name,
+            "label": get_label_for_name(name),
             "default": get_default(name),
             "value": get_value(name),
             "type": "text",  # "picker" "text",

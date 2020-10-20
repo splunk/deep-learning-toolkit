@@ -8,7 +8,7 @@ from . import method_api
 from dltk.core import is_truthy
 from dltk.core import deployment
 from dltk.core import runtime
-
+from dltk.core import get_label_for_name
 
 __all__ = [
     "AlgorithmsHandler",
@@ -38,6 +38,7 @@ class AlgorithmParamsHandler(BaseRestHandler):
         params = []
         params.extend([{
             "name": name,
+            "label": get_label_for_name(name),
             "default": get_default(name),
             "value": get_value(name),
             "type": "text",  # "picker" "text",
@@ -49,6 +50,7 @@ class AlgorithmParamsHandler(BaseRestHandler):
                 params.extend([{
                     "environment": e.name,
                     "name": name,
+                    "label": get_label_for_name(name),
                     "default": deployment.get_default_param(name, e, algorithm=a),
                     "value": d.get_param(name, inherit=False),
                     "type": "text",  # "picker" "text",

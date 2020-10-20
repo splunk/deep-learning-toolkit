@@ -2,10 +2,12 @@ from . import dltk_algorithm
 import inspect
 import json
 import sys
+import copy
 
 
-def notebook_method(f):
+def notebook_method(f, metadata={}):
     f.is_notebook_method = True
+    f.notebook_cell_metadata = metadata
     return f
 
 
@@ -38,32 +40,39 @@ class NotebookAlgorithmTestCase(dltk_algorithm.AlgorithmTestCase):
         return '\n'.join(trimmed)
 
     @classmethod
+    def get_default_cell_metadata(cls):
+        return {}
+
+    @classmethod
     def get_source_code(cls):
 
-        lines = []
+        cells = []
 
         for attr_name in dir(cls):
             attr = getattr(cls, attr_name)
             if hasattr(attr, "is_notebook_method"):
+                default_cell_metadata = cls.get_default_cell_metadata()
+                method_cell_metadata = copy.deepcopy(getattr(attr, "notebook_cell_metadata"))
+                method_cell_metadata.update(default_cell_metadata)
                 source = inspect.getsource(attr)
                 source = cls.trim(source)
+                lines = []
                 for line in source.split("\n"):
                     if line.find("@dltk_algorithm_notebook_testcase.notebook_method") >= 0:
                         continue
                     if line.find("@notebook_method") >= 0:
                         continue
-                    lines.append(line)
-
-        source_code = {
-            "cells": [
-                {
+                    lines.append(line+"\n")
+                cells.append({
                     "cell_type": "code",
-                    "execution_count": 45,
-                    "metadata": {},
+                    "execution_count": 0,
+                    "metadata": method_cell_metadata,
                     "outputs": [],
                     "source": lines
-                }
-            ],
+                })
+
+        source_code = {
+            "cells": cells,
             "metadata": {
                 "kernelspec": {
                     "display_name": "Python 3",

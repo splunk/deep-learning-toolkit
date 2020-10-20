@@ -207,14 +207,14 @@ class AlgorithmTestCase(unittest.TestCase):
                 del params["runtime"]
             else:
                 runtime_name = None
+            source_code = cls.get_source_code()
             create(
                 algorithm_name,
                 runtime_name,
                 params={
                     **{
-                        "source_code": cls.get_source_code(),
+                        "source_code": source_code,
                         "source_code_version": "1",
-                        "deployment_code_version": "1",
                     },
                     **params
                 },

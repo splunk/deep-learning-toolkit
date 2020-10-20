@@ -7,6 +7,7 @@ from dltk.core.environment.test_environment import *
 from dltk.core.algorithm.test_algorithm_api import *
 from dltk.core.algorithm.test_method_api import *
 from dltk.core.deployment.test_deployment_api import *
+from dltk.runtime.base.test_base import *
 from dltk.runtime.spark.test_spark import *
 
 test_names = []

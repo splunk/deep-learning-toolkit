@@ -39,7 +39,7 @@ class SparkTestCase(NotebookAlgorithmTestCase):
 class TestEchoingRDD(SparkTestCase):
 
     @notebook_method
-    def echo_rdd(self, events):
+    def echo_rdd(sc, events):  # noqa
         return events
 
     def runTest(self):
@@ -56,7 +56,7 @@ class TestEchoingRDD(SparkTestCase):
 class TestFailingMethod(SparkTestCase):
 
     @notebook_method
-    def expected_error(self, events):
+    def expected_error(sc, events):  # noqa
         raise Exception("expected_error")
 
     def runTest(self):

@@ -9,7 +9,13 @@ phases:
     commands:
       - BUILD_DIR=$CODEBUILD_SRC_DIR/build
       - IMAGES_DIR=$CODEBUILD_SRC_DIR/images
-      # build spark images
+      # build base-runtime images
+      - BASE_DIR=$IMAGES_DIR/base
+      - BASE_IMAGE=phdrieger/dltk-base-golden-image-gpu:4.0.0
+      - cd $BASE_DIR
+      - ./build.sh golden-image-gpu-4 phdrieger/ 4.0.0
+      - docker tag phdrieger/mltk-container-golden-image-gpu-4:4.0.0 phdrieger/dltk-base-golden-image-gpu:4.0.0
+      # build spark-runtime images
       - SPARK_DIR=$IMAGES_DIR/spark
       - SPARK_DRIVER_IMAGE=hovu96/dltk-spark-runtime:driver-thin
       - SPARK_DRIVER_PROXY_IMAGE=hovu96/dltk-spark-runtime:driver-proxy
@@ -86,6 +92,8 @@ phases:
       - cat $BUILD_DIR/splunk_operator_for_kubernetes.yaml | docker run --network=container:$K3D_ID --rm -e "KUBECONFIG=/tmp/.kube/config" -i kubectl apply -f -
       # Start Splunk
       - cat $BUILD_DIR/splunk_environment.yaml | docker run --network=container:$K3D_ID --rm -e "KUBECONFIG=/tmp/.kube/config" -i kubectl apply -f -
+      # Import base-runtime images
+      - k3d image import $BASE_IMAGE -c dltkbuild
       # Import Spark images
       - k3d image import $SPARK_DRIVER_IMAGE $SPARK_DRIVER_PROXY_IMAGE $SPARK_EDITOR_IMAGE $SPARK_OUTBOUND_RELAY_IMAGE $SPARK_INBOUND_RELAY_IMAGE -c dltkbuild
       # Wait for Spark Operator

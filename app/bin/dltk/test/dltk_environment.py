@@ -28,6 +28,7 @@ def set_up():
         environment.submit({
             "connector": "kubernetes",
             "auth_mode": "in-cluster",
+            "ingress_mode": "ingress",
             "ingress_url": os.getenv("DLTK_INGRESS_URL", "http://ingress"),
             "ingress_class": os.getenv("DLTK_INGRESS_CLASS", "nginx"),
             "relay_hdfs_url": os.getenv("DLTK_HDFS_HTTP_URL", "http://hdfs-namenode:50070"),

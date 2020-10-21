@@ -176,6 +176,20 @@ def algorithm_params(**params):
     return decorator
 
 
+def deployment_params(**params):
+    def decorator(cls):
+        super_func = cls.get_deployment_params
+
+        @wraps(cls.get_deployment_params)
+        def decorated_func():
+            result = super_func()
+            result.update(params)
+            return result
+        cls.get_deployment_params = decorated_func
+        return cls
+    return decorator
+
+
 class AlgorithmTestCase(unittest.TestCase):
 
     @classmethod
@@ -195,18 +209,23 @@ class AlgorithmTestCase(unittest.TestCase):
         return {}
 
     @classmethod
+    def get_deployment_params(cls):
+        return {}
+
+    @classmethod
     def setUpClass(cls):
         algorithm_name = cls.get_algorithm_name()
         if exists(algorithm_name):
             dltk_deployment.undeploy(algorithm_name)
             delete(algorithm_name)
         try:
-            params = cls.get_algorithm_params()
-            if "runtime" in params:
-                runtime_name = params["runtime"]
-                del params["runtime"]
+            algorithm_params = cls.get_algorithm_params()
+            if "runtime" in algorithm_params:
+                runtime_name = algorithm_params["runtime"]
+                del algorithm_params["runtime"]
             else:
                 runtime_name = None
+            deployment_params = cls.get_deployment_params()
             source_code = cls.get_source_code()
             create(
                 algorithm_name,
@@ -216,13 +235,13 @@ class AlgorithmTestCase(unittest.TestCase):
                         "source_code": source_code,
                         "source_code_version": "1",
                     },
-                    **params
+                    **algorithm_params
                 },
                 delete_if_already_exists=True,
             )
             for method_name, method_params in cls.get_algorithm_methods().items():
                 create_method(algorithm_name, method_name, method_params)
-            dltk_deployment.deploy(algorithm_name)
+            dltk_deployment.deploy(algorithm_name, deployment_params)
         except:
             cls.tearDownClass()
             raise

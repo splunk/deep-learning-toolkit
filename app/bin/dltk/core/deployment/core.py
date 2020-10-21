@@ -15,12 +15,15 @@ __all__ = [
 ]
 
 
-def create(splunk, algorithm_name, environment_name, enable_schedule=None):
+def create(splunk, algorithm_name, environment_name, enable_schedule=None, params={}):
     deploymane_name = stanza_name.format(algorithm_name, environment_name)
     stanza = splunk.confs[conf_name].create(deploymane_name)
     guid = str(uuid.uuid4())[:8]
     stanza.submit({
-        "guid": guid,
+        **{
+            "guid": guid,
+        },
+        **params,
     })
     stanza.refresh()
     deployment = get(splunk, algorithm_name, environment_name)
@@ -45,4 +48,3 @@ def delete(splunk, deployment, enable_schedule=None):
             return
         err_msg = traceback.format_exc()
         raise Exception("HTTPError: %s" % err_msg)
-

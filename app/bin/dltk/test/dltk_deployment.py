@@ -89,14 +89,17 @@ def get_deployment(algorithm_name, environment_name, raise_if_not_exists=True):
     return deployments[0]
 
 
-def deploy(algorithm_name):
+def deploy(algorithm_name, params={}):
     undeploy(algorithm_name)
     splunk = splunk_api.connect()
     environment_name = dltk_environment.get_name()
     dltk_api.call("POST", "deployments", data={
-        "algorithm": algorithm_name,
-        "environment": environment_name,
-        "enable_schedule": False,
+        **{
+            "algorithm": algorithm_name,
+            "environment": environment_name,
+            "enable_schedule": False,
+        },
+        **params,
     }, return_entries=False)
     try:
         while True:

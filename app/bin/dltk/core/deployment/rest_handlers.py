@@ -74,9 +74,8 @@ class DeploymentParamsHandler(BaseRestHandler):
 class DeploymentsHandler(BaseRestHandler):
 
     def handle_GET(self):
-        query = self.request['query']
-        algorithm_name = query.get("algorithm", "")
-        environment_name = query.get("environment", "")
+        algorithm_name = self.get_param("algorithm")
+        environment_name = self.get_param("environment")
         if environment_name and algorithm_name:
             deployments = [get(self.splunk, algorithm_name, environment_name)]
         if algorithm_name:
@@ -98,24 +97,30 @@ class DeploymentsHandler(BaseRestHandler):
         self.send_entries(results)
 
     def handle_POST(self):
-        params = parse_qs(self.request['payload'])
-        if not "algorithm" in params:
+        algorithm_name = self.get_param("algorithm")
+        environment_name = self.get_param("environment")
+        if not algorithm_name:
             raise Exception("missing algorithm")
-        algorithm_name = params["algorithm"][0]
-        a = algorithm.get(self.splunk, algorithm_name)
-        if not "environment" in params:
+        if not environment_name:
             raise Exception("missing environment")
-        environment_name = params["environment"][0]
+        a = algorithm.get(self.splunk, algorithm_name)
         e = environment.get(self.splunk, environment_name)
-        if "enable_schedule" in params:
-            enable_schedule = is_truthy(params["enable_schedule"][0])
+        enable_schedule = self.get_param("environment")
+        if enable_schedule:
+            enable_schedule = is_truthy(enable_schedule)
         else:
             enable_schedule = None
+        deployment_params = {}
+        for name in a.runtime.deployment_param_names:
+            value = self.get_param(name)
+            if value is not None:
+                deployment_params[name] = value
         create(
             self.splunk,
             a.name,
             e.name,
             enable_schedule=enable_schedule,
+            params=deployment_params,
         )
 
     def handle_PUT(self):

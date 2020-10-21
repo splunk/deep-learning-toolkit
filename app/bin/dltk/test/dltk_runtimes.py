@@ -7,6 +7,7 @@ from . import dltk_api
 def set_up():
     splunk = splunk_api.connect()
     runtimes = splunk.confs["dltk_runtimes"]
+    # spark
     spark_runtime = runtimes["spark"]
     spark_driver_image = os.getenv("DLTK_SPARK_RUNTIME_DRIVER_IMAGE", "")
     if spark_driver_image:
@@ -59,6 +60,7 @@ def get_algorithm_params(name):
             "runtime": name,
         }
     )
+
 
 def get_algorithm_param(runtime_name, param_name):
     params = get_algorithm_params(runtime_name)

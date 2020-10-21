@@ -22,7 +22,7 @@ __all__ = [
 
 
 @dltk_algorithm.deployment_params(
-    store_models_in_volume=True,
+    store_models_in_volume=False,
 )
 @dltk_algorithm.algorithm_params(
     runtime="base",

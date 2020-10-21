@@ -2,7 +2,7 @@
 
 This guide is divided into the following sections:
 
-- [Building from Sources](build.md)
-- [Running Tests](test.md)
 - [Contributing Guidelines](contributing.md)
+- [Running Tests](test.md)
+- [Building from Sources](build.md)
 - [Creating Tests](test.md)

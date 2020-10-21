@@ -1,3 +1,5 @@
+import sys
+sys.path.insert(0,'/dltk/.jupyter')
 
 def post_save(model, os_path, contents_manager):
     import jupyter_notebook_conversion

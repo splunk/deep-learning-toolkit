@@ -220,18 +220,28 @@ class KubernetesDeployment(Deployment):
             return False
 
     def ensure_deployment_is_ready(self, deployment, not_ready_error, title=None):
-        if not title:
-            title = "deployment %s" % deployment.metadata.name
-        if not deployment.status:
-            raise not_ready_error("Waiting for %s status" % title)
-        # self.logger.info("deployment.spec.replicas: %s" % deployment.spec.replicas)
-        # self.logger.info("deployment.status.replicas: %s" % deployment.status.replicas)
-        if deployment.status.replicas is None:
-            raise not_ready_error("Waiting for %s to become ready" % title)
-        if deployment.status.ready_replicas is None:
-            raise not_ready_error("Waiting for %s to become ready" % title)
-        if deployment.status.ready_replicas != deployment.spec.replicas:
-            raise not_ready_error("Waiting for %s to become ready" % title)
+        is_ready = False
+        try:
+            if not title:
+                title = "deployment %s" % deployment.metadata.name
+            if not deployment.status:
+                raise not_ready_error("Waiting for %s status" % title)
+            # self.logger.info("deployment.spec.replicas: %s" % deployment.spec.replicas)
+            # self.logger.info("deployment.status.replicas: %s" % deployment.status.replicas)
+            if deployment.status.replicas is None:
+                raise not_ready_error("Waiting for %s to become ready (no replicas)" % title)
+            if deployment.status.ready_replicas is None:
+                raise not_ready_error("Waiting for %s to become ready (no ready_replicas)" % title)
+            if deployment.status.ready_replicas != deployment.spec.replicas:
+                raise not_ready_error("Waiting for %s to become ready (not enought ready replicas: %s/%s)" % (
+                    title,
+                    deployment.status.ready_replicas,
+                    deployment.spec.replicas,
+                ))
+            is_ready = True
+        finally:
+            if not is_ready:
+                self.logger.error("deployment.status: %s" % deployment.status)
 
     def is_stateful_set_ready(self, stateful_set):
         class NotReady(Exception):

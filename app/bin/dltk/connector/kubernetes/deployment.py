@@ -242,6 +242,17 @@ class KubernetesDeployment(Deployment):
         finally:
             if not is_ready:
                 self.logger.error("deployment.status: %s" % deployment.status)
+                self.logger.error("deployment.spec: %s" % deployment.spec)
+                label_selector = ",".join([
+                    "%s=%s" % (k, v)
+                    for k, v in deployment.spec.selector.match_labels.items()
+                ])
+                pods = self.core_api.list_namespaced_pod(
+                    namespace=self.environment.namespace,
+                    label_selector=label_selector,
+                ).items
+                for pod in pods:
+                    self.logger.error("pod: %s" % pod.status)
 
     def is_stateful_set_ready(self, stateful_set):
         class NotReady(Exception):

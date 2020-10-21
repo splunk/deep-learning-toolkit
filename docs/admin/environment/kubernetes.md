@@ -1,6 +1,6 @@
 # Kubernetes
 
-For connecting DLTK to a Kubernetes environment, please use the `kubernetes` *Connector* in the *Create Environment* dialog. Depending on the type of Kubernetes environment you must also specify additional fields. This guide describes how this works for typical Kubernetes Distributions.
+For connecting DLTK to a Kubernetes environment, please use the `kubernetes` *Connector* in the *Create Environment* dialog. Depending on the type of Kubernetes environment you must also specify additional fields. This guide describes how this works for typical Kubernetes distributions.
 
 If you want to create a new *Environment*, please see the [Connect to Environments](README.md) documentation.
 

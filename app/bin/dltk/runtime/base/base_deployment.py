@@ -1,8 +1,7 @@
 import urllib
 from urllib.parse import urlparse
 import http
-from dltk.core import deployment
-from dltk.core import execution
+from dltk.core import execution, deployment, is_truthy
 from dltk.connector.kubernetes import KubernetesDeployment
 from kubernetes import client as kubernetes_client
 from dltk.core.deployment import status as deployment_status, UserFriendlyError
@@ -12,6 +11,10 @@ __all__ = ["BaseDeployment"]
 
 
 class BaseDeployment(KubernetesDeployment):
+
+    @property
+    def store_models_in_volume(self):
+        return is_truthy(self.get_param("store_models_in_volume"))
 
     def __init__(self, splunk, stanza):
         super().__init__(splunk, stanza, "11")
@@ -23,7 +26,10 @@ class BaseDeployment(KubernetesDeployment):
                 "api_url": "",
             }
         else:
-            models_volume_claim = self.deploy_base_volume_claim()
+            if self.store_models_in_volume:
+                models_volume_claim = self.deploy_base_volume_claim()
+            else:
+                models_volume_claim = None
             d = self.deploy_base_deployment(models_volume_claim)
             self.wait_for_deployment(d)
 
@@ -110,6 +116,25 @@ class BaseDeployment(KubernetesDeployment):
         if self.environment.ingress_mode == "ingress":
             juypter_base_url = self.get_ingress_path("editor")
 
+        if models_volume_claim:
+            volumes = [
+                kubernetes_client.V1Volume(
+                    name="data",
+                    persistent_volume_claim=kubernetes_client.V1PersistentVolumeClaimVolumeSource(
+                        claim_name=models_volume_claim.metadata.name,
+                    )
+                ),
+            ]
+            volume_mounts = [
+                kubernetes_client.V1VolumeMount(
+                    mount_path="/srv",
+                    name="data",
+                ),
+            ]
+        else:
+            volumes = []
+            volume_mounts = []
+
         return self.deploy_deployment(
             self.get_param("image"),
             cpu_count=int(self.get_param("cpu_count")),
@@ -142,20 +167,8 @@ class BaseDeployment(KubernetesDeployment):
                     value=juypter_base_url,
                 )
             ],
-            volumes=[
-                kubernetes_client.V1Volume(
-                    name="data",
-                    persistent_volume_claim=kubernetes_client.V1PersistentVolumeClaimVolumeSource(
-                        claim_name=models_volume_claim.metadata.name,
-                    )
-                ),
-            ],
-            volume_mounts=[
-                kubernetes_client.V1VolumeMount(
-                    mount_path="/srv",
-                    name="data",
-                ),
-            ],
+            volume_mounts=volume_mounts,
+            volumes=volumes,
             run_as_user=1001,
             fs_group=0
         )

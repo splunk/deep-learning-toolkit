@@ -21,8 +21,13 @@ __all__ = [
 ]
 
 
-@dltk_algorithm.algorithm_params(runtime="base")
-@dltk_algorithm.algorithm_params(command_type="reporting")
+@dltk_algorithm.deployment_params(
+    store_models_in_volume=True,
+)
+@dltk_algorithm.algorithm_params(
+    runtime="base",
+    command_type="reporting",
+)
 class BaseRuntimeTestCase(NotebookAlgorithmTestCase):
     @classmethod
     def get_default_cell_metadata(cls):

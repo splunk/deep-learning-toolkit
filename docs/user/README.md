@@ -1,6 +1,6 @@
-# Guide for DLTK Users & Data Scientists
+# User Guide
 
-This guide is divided into the following sections:
+This guide is divided into the following sections (**work in progress**):
 
 - [Example Use Cases](examples.md)
 - [Core Concepts](core/README.md)

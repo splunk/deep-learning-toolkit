@@ -1,4 +1,4 @@
-# Guide for DLTK Developers
+# Developer Guide
 
 This guide is divided into the following sections:
 

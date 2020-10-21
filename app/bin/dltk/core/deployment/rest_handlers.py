@@ -105,7 +105,7 @@ class DeploymentsHandler(BaseRestHandler):
             raise Exception("missing environment")
         a = algorithm.get(self.splunk, algorithm_name)
         e = environment.get(self.splunk, environment_name)
-        enable_schedule = self.get_param("environment")
+        enable_schedule = self.get_param("enable_schedule")
         if enable_schedule:
             enable_schedule = is_truthy(enable_schedule)
         else:

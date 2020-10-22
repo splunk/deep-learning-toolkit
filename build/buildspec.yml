@@ -9,6 +9,7 @@ env:
 phases:
   install:
     commands:
+      - echo "CODEBUILD_SOURCE_VERSION=$CODEBUILD_SOURCE_VERSION"
       - BUILD_DIR=$CODEBUILD_SRC_DIR/build
       - IMAGES_DIR=$CODEBUILD_SRC_DIR/images
       # build spark-runtime images

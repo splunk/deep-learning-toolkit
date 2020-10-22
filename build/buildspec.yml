@@ -9,8 +9,6 @@ env:
 phases:
   install:
     commands:
-      - echo "DOCKER_ACCOUNT=$DOCKER_ACCOUNT"
-      - echo "DOCKER_PASSWORD=$DOCKER_PASSWORD"
       - BUILD_DIR=$CODEBUILD_SRC_DIR/build
       - IMAGES_DIR=$CODEBUILD_SRC_DIR/images
       # build spark-runtime images
@@ -28,13 +26,6 @@ phases:
       - docker build --rm -f "./editor/thin.Dockerfile" -t $DLTK_SPARK_RUNTIME_EDITOR_IMAGE .
       - docker build --rm -f "./inbound-relay/Dockerfile" -t $DLTK_SPARK_RUNTIME_INBOUND_RELAY_IMAGE .
       - docker build --rm -f "./outbound-relay/Dockerfile" -t $DLTK_SPARK_RUNTIME_OUTBOUND_RELAY_IMAGE .
-      - echo $DOCKER_PASSWORD | docker login --username $DOCKER_ACCOUNT --password-stdin
-      - docker push $DLTK_SPARK_RUNTIME_DRIVER_IMAGE
-      - docker push $DLTK_SPARK_RUNTIME_EXECUTOR_IMAGE
-      - docker push $DLTK_SPARK_RUNTIME_DRIVER_PROXY_IMAGE
-      - docker push $DLTK_SPARK_RUNTIME_EDITOR_IMAGE
-      - docker push $DLTK_SPARK_RUNTIME_INBOUND_RELAY_IMAGE
-      - docker push $DLTK_SPARK_RUNTIME_OUTBOUND_RELAY_IMAGE
       # build base-runtime images
       - BASE_DIR=$IMAGES_DIR/base
       - cd $BASE_DIR
@@ -155,3 +146,18 @@ phases:
   post_build:
     commands:
       - k3d cluster delete dltkbuild
+      - |
+        if [ -n "$DOCKER_PASSWORD" ]; then
+          set -e
+          set -x
+          echo $DOCKER_PASSWORD | docker login --username $DOCKER_ACCOUNT --password-stdin
+          docker push $DLTK_SPARK_RUNTIME_DRIVER_IMAGE
+          docker push $DLTK_SPARK_RUNTIME_EXECUTOR_IMAGE
+          docker push $DLTK_SPARK_RUNTIME_DRIVER_PROXY_IMAGE
+          docker push $DLTK_SPARK_RUNTIME_EDITOR_IMAGE
+          docker push $DLTK_SPARK_RUNTIME_INBOUND_RELAY_IMAGE
+          docker push $DLTK_SPARK_RUNTIME_OUTBOUND_RELAY_IMAGE
+          docker push $DLTK_BASE_RUNTIME_IMAGE
+        else
+          echo 'Not pushing'
+        fi

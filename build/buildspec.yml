@@ -2,32 +2,45 @@ version: 0.2
 
 env:
   variables:
-    WORKER_COUNT: "1"
+    DOCKER_ACCOUNT: "dltk4splunk"
+  #parameter-store:
+  #  DOCKER_PASSWORD: /CodeBuild/DOCKER_PASSWORD
 
 phases:
   install:
     commands:
+      - echo "DOCKER_ACCOUNT=$DOCKER_ACCOUNT"
+      - echo "DOCKER_PASSWORD=$DOCKER_PASSWORD"
       - BUILD_DIR=$CODEBUILD_SRC_DIR/build
       - IMAGES_DIR=$CODEBUILD_SRC_DIR/images
-      # build base-runtime images
-      - BASE_DIR=$IMAGES_DIR/base
-      - BASE_IMAGE=phdrieger/dltk-base-golden-image-gpu:4.0.0
-      - cd $BASE_DIR
-      - ./build.sh golden-image-gpu-4 phdrieger/ 4.0.0
-      - docker tag phdrieger/mltk-container-golden-image-gpu-4:4.0.0 phdrieger/dltk-base-golden-image-gpu:4.0.0
       # build spark-runtime images
       - SPARK_DIR=$IMAGES_DIR/spark
-      - SPARK_DRIVER_IMAGE=hovu96/dltk-spark-runtime:driver-thin
-      - SPARK_DRIVER_PROXY_IMAGE=hovu96/dltk-spark-runtime:driver-proxy
-      - SPARK_EDITOR_IMAGE=hovu96/dltk-spark-runtime:editor-thin
-      - SPARK_INBOUND_RELAY_IMAGE=hovu96/dltk-spark-runtime:inbound-relay
-      - SPARK_OUTBOUND_RELAY_IMAGE=hovu96/dltk-spark-runtime:outbound-relay
+      - DLTK_SPARK_RUNTIME_DRIVER_IMAGE=$DOCKER_ACCOUNT/spark-runtime:driver-thin
+      - DLTK_SPARK_RUNTIME_EXECUTOR_IMAGE=$DOCKER_ACCOUNT/spark-runtime:executor-thin
+      - DLTK_SPARK_RUNTIME_DRIVER_PROXY_IMAGE=$DOCKER_ACCOUNT/spark-runtime:driver-proxy
+      - DLTK_SPARK_RUNTIME_EDITOR_IMAGE=$DOCKER_ACCOUNT/spark-runtime:editor-thin
+      - DLTK_SPARK_RUNTIME_INBOUND_RELAY_IMAGE=$DOCKER_ACCOUNT/spark-runtime:inbound-relay
+      - DLTK_SPARK_RUNTIME_OUTBOUND_RELAY_IMAGE=$DOCKER_ACCOUNT/spark-runtime:outbound-relay
       - cd $SPARK_DIR
-      - docker build --rm -f "./driver/thin.Dockerfile" -t $SPARK_DRIVER_IMAGE .
-      - docker build --rm -f "./driver-proxy/Dockerfile" -t $SPARK_DRIVER_PROXY_IMAGE .
-      - docker build --rm -f "./editor/thin.Dockerfile" -t $SPARK_EDITOR_IMAGE .
-      - docker build --rm -f "./inbound-relay/Dockerfile" -t $SPARK_INBOUND_RELAY_IMAGE .
-      - docker build --rm -f "./outbound-relay/Dockerfile" -t $SPARK_OUTBOUND_RELAY_IMAGE .
+      - docker build --rm -f "./driver/thin.Dockerfile" -t $DLTK_SPARK_RUNTIME_DRIVER_IMAGE .
+      - docker build --rm -f "./driver/thin.Dockerfile" -t $DLTK_SPARK_RUNTIME_EXECUTOR_IMAGE .
+      - docker build --rm -f "./driver-proxy/Dockerfile" -t $DLTK_SPARK_RUNTIME_DRIVER_PROXY_IMAGE .
+      - docker build --rm -f "./editor/thin.Dockerfile" -t $DLTK_SPARK_RUNTIME_EDITOR_IMAGE .
+      - docker build --rm -f "./inbound-relay/Dockerfile" -t $DLTK_SPARK_RUNTIME_INBOUND_RELAY_IMAGE .
+      - docker build --rm -f "./outbound-relay/Dockerfile" -t $DLTK_SPARK_RUNTIME_OUTBOUND_RELAY_IMAGE .
+      - echo $DOCKER_PASSWORD | docker login --username $DOCKER_ACCOUNT --password-stdin
+      - docker push $DLTK_SPARK_RUNTIME_DRIVER_IMAGE
+      - docker push $DLTK_SPARK_RUNTIME_EXECUTOR_IMAGE
+      - docker push $DLTK_SPARK_RUNTIME_DRIVER_PROXY_IMAGE
+      - docker push $DLTK_SPARK_RUNTIME_EDITOR_IMAGE
+      - docker push $DLTK_SPARK_RUNTIME_INBOUND_RELAY_IMAGE
+      - docker push $DLTK_SPARK_RUNTIME_OUTBOUND_RELAY_IMAGE
+      # build base-runtime images
+      - BASE_DIR=$IMAGES_DIR/base
+      - cd $BASE_DIR
+      - ./build.sh golden-image-gpu-4 phdrieger/ 4.0.0
+      - DLTK_BASE_RUNTIME_IMAGE=$DOCKER_ACCOUNT/base-runtime:goldengpu
+      - docker tag phdrieger/mltk-container-golden-image-gpu-4:4.0.0 $DLTK_BASE_RUNTIME_IMAGE
       # Install K3D
       - wget -q -O - https://raw.githubusercontent.com/rancher/k3d/main/install.sh | bash
       # Install HELM
@@ -93,9 +106,9 @@ phases:
       # Start Splunk
       - cat $BUILD_DIR/splunk_environment.yaml | docker run --network=container:$K3D_ID --rm -e "KUBECONFIG=/tmp/.kube/config" -i kubectl apply -f -
       # Import base-runtime images
-      - k3d image import $BASE_IMAGE -c dltkbuild
+      - k3d image import $DLTK_BASE_RUNTIME_IMAGE -c dltkbuild
       # Import Spark images
-      - k3d image import $SPARK_DRIVER_IMAGE $SPARK_DRIVER_PROXY_IMAGE $SPARK_EDITOR_IMAGE $SPARK_OUTBOUND_RELAY_IMAGE $SPARK_INBOUND_RELAY_IMAGE -c dltkbuild
+      - k3d image import $DLTK_SPARK_RUNTIME_DRIVER_IMAGE $DLTK_SPARK_RUNTIME_EXECUTOR_IMAGE $DLTK_SPARK_RUNTIME_DRIVER_PROXY_IMAGE $DLTK_SPARK_RUNTIME_EDITOR_IMAGE $DLTK_SPARK_RUNTIME_OUTBOUND_RELAY_IMAGE $DLTK_SPARK_RUNTIME_INBOUND_RELAY_IMAGE -c dltkbuild
       # Wait for Spark Operator
       - echo "waiting for Spark operator ..."; docker run --network=container:$K3D_ID --rm -e "KUBECONFIG=/tmp/.kube/config" kubectl wait --for=condition=available --timeout=5m deployment/sparkoperator
       # Wait for HDFS
@@ -131,7 +144,14 @@ phases:
       - cat "/tmp/source.tar.gz" | docker run --network=container:$K3D_ID -i --rm -e KUBECONFIG=/tmp/.kube/config kubectl exec -i $TARGET_SPLUNK_POD_NAME -- /bin/bash -c 'cat > /tmp/source.tar.gz'
       - docker run --network=container:$K3D_ID --rm -e KUBECONFIG=/tmp/.kube/config kubectl exec $TARGET_SPLUNK_POD_NAME -- tar zxf /tmp/source.tar.gz -C /tmp/source
       - echo "$SPLUNK_ADMIN_PASSWORD" | docker run --network=container:$K3D_ID -i --rm -e KUBECONFIG=/tmp/.kube/config kubectl exec -i $TARGET_SPLUNK_POD_NAME -- /bin/bash -c 'cat > /tmp/SPLUNK_ADMIN_PASSWORD'
-      - docker run --network=container:$K3D_ID --rm -e KUBECONFIG=/tmp/.kube/config kubectl exec $TARGET_SPLUNK_POD_NAME -- /bin/bash -c 'SPLUNK_PASSWORD="$(cat /tmp/SPLUNK_ADMIN_PASSWORD)" DLTK_INGRESS_URL="http://haproxy-haproxy-ingress-controller/" DLTK_INGRESS_CLASS="haproxy" DLTK_HDFS_HTTP_URL="http://my-hdfs-namenode:50070" DLTK_HDFS_URL="hdfs://my-hdfs-namenode" DLTK_APP_NAME="dltk" SKIP_TEST_UNLESS_=ListEnvironmentTestCase /opt/splunk/bin/splunk cmd python3 /tmp/source/test/test.py'
+      - echo "$DLTK_BASE_RUNTIME_IMAGE" | docker run --network=container:$K3D_ID -i --rm -e KUBECONFIG=/tmp/.kube/config kubectl exec -i $TARGET_SPLUNK_POD_NAME -- /bin/bash -c 'cat > /tmp/DLTK_BASE_RUNTIME_IMAGE'
+      - echo "$DLTK_SPARK_RUNTIME_DRIVER_IMAGE" | docker run --network=container:$K3D_ID -i --rm -e KUBECONFIG=/tmp/.kube/config kubectl exec -i $TARGET_SPLUNK_POD_NAME -- /bin/bash -c 'cat > /tmp/DLTK_SPARK_RUNTIME_DRIVER_IMAGE'
+      - echo "$DLTK_SPARK_RUNTIME_EXECUTOR_IMAGE" | docker run --network=container:$K3D_ID -i --rm -e KUBECONFIG=/tmp/.kube/config kubectl exec -i $TARGET_SPLUNK_POD_NAME -- /bin/bash -c 'cat > /tmp/DLTK_SPARK_RUNTIME_EXECUTOR_IMAGE'
+      - echo "$DLTK_SPARK_RUNTIME_DRIVER_PROXY_IMAGE" | docker run --network=container:$K3D_ID -i --rm -e KUBECONFIG=/tmp/.kube/config kubectl exec -i $TARGET_SPLUNK_POD_NAME -- /bin/bash -c 'cat > /tmp/DLTK_SPARK_RUNTIME_DRIVER_PROXY_IMAGE'
+      - echo "$DLTK_SPARK_RUNTIME_EDITOR_IMAGE" | docker run --network=container:$K3D_ID -i --rm -e KUBECONFIG=/tmp/.kube/config kubectl exec -i $TARGET_SPLUNK_POD_NAME -- /bin/bash -c 'cat > /tmp/DLTK_SPARK_RUNTIME_EDITOR_IMAGE'
+      - echo "$DLTK_SPARK_RUNTIME_INBOUND_RELAY_IMAGE" | docker run --network=container:$K3D_ID -i --rm -e KUBECONFIG=/tmp/.kube/config kubectl exec -i $TARGET_SPLUNK_POD_NAME -- /bin/bash -c 'cat > /tmp/DLTK_SPARK_RUNTIME_INBOUND_RELAY_IMAGE'
+      - echo "$DLTK_SPARK_RUNTIME_OUTBOUND_RELAY_IMAGE" | docker run --network=container:$K3D_ID -i --rm -e KUBECONFIG=/tmp/.kube/config kubectl exec -i $TARGET_SPLUNK_POD_NAME -- /bin/bash -c 'cat > /tmp/DLTK_SPARK_RUNTIME_OUTBOUND_RELAY_IMAGE'
+      - docker run --network=container:$K3D_ID --rm -e KUBECONFIG=/tmp/.kube/config kubectl exec $TARGET_SPLUNK_POD_NAME -- /bin/bash -c 'SPLUNK_PASSWORD="$(cat /tmp/SPLUNK_ADMIN_PASSWORD)" DLTK_BASE_RUNTIME_IMAGE="$(cat /tmp/DLTK_BASE_RUNTIME_IMAGE)" DLTK_SPARK_RUNTIME_DRIVER_IMAGE="$(cat /tmp/DLTK_SPARK_RUNTIME_DRIVER_IMAGE)" DLTK_SPARK_RUNTIME_EXECUTOR_IMAGE="$(cat /tmp/DLTK_SPARK_RUNTIME_EXECUTOR_IMAGE)" DLTK_SPARK_RUNTIME_DRIVER_PROXY_IMAGE="$(cat /tmp/DLTK_SPARK_RUNTIME_DRIVER_PROXY_IMAGE)" DLTK_SPARK_RUNTIME_EDITOR_IMAGE="$(cat /tmp/DLTK_SPARK_RUNTIME_EDITOR_IMAGE)" DLTK_SPARK_RUNTIME_INBOUND_RELAY_IMAGE="$(cat /tmp/DLTK_SPARK_RUNTIME_INBOUND_RELAY_IMAGE)" DLTK_SPARK_RUNTIME_OUTBOUND_RELAY_IMAGE="$(cat /tmp/DLTK_SPARK_RUNTIME_OUTBOUND_RELAY_IMAGE)" DLTK_INGRESS_URL="http://haproxy-haproxy-ingress-controller/" DLTK_INGRESS_CLASS="haproxy" DLTK_HDFS_HTTP_URL="http://my-hdfs-namenode:50070" DLTK_HDFS_URL="hdfs://my-hdfs-namenode" DLTK_APP_NAME="dltk" SKIP_TEST_UNLESS_=ListEnvironmentTestCase /opt/splunk/bin/splunk cmd python3 /tmp/source/test/test.py'
   post_build:
     commands:
       - k3d cluster delete dltkbuild

@@ -14,6 +14,38 @@ def set_up():
         spark_runtime.submit({
             "driver_image": spark_driver_image,
         })
+    spark_executor_image = os.getenv("DLTK_SPARK_RUNTIME_EXECUTOR_IMAGE", "")
+    if spark_executor_image:
+        spark_runtime.submit({
+            "executor_image": spark_executor_image,
+        })
+    spark_driver_proxy_image = os.getenv("DLTK_SPARK_RUNTIME_DRIVER_PROXY_IMAGE", "")
+    if spark_driver_proxy_image:
+        spark_runtime.submit({
+            "driver_proxy_image": spark_driver_proxy_image,
+        })
+    spark_editor_image = os.getenv("DLTK_SPARK_RUNTIME_EDITOR_IMAGE", "")
+    if spark_editor_image:
+        spark_runtime.submit({
+            "editor_image": spark_editor_image,
+        })
+    spark_inbound_relay_image = os.getenv("DLTK_SPARK_RUNTIME_INBOUND_RELAY_IMAGE", "")
+    if spark_inbound_relay_image:
+        spark_runtime.submit({
+            "inbound_relay_image": spark_inbound_relay_image,
+        })
+    spark_outbound_relay_image = os.getenv("DLTK_SPARK_RUNTIME_OUTBOUND_RELAY_IMAGE", "")
+    if spark_outbound_relay_image:
+        spark_runtime.submit({
+            "outbound_relay_image": spark_outbound_relay_image,
+        })
+    # base
+    base_runtime = runtimes["base"]
+    base_runtime_image = os.getenv("DLTK_BASE_RUNTIME_IMAGE", "")
+    if base_runtime_image:
+        base_runtime.submit({
+            "image": base_runtime_image,
+        })
 
 
 def tear_down():

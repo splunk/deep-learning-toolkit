@@ -9,17 +9,17 @@ env:
 phases:
   install:
     commands:
-      - echo "CODEBUILD_SOURCE_VERSION=$CODEBUILD_SOURCE_VERSION"
       - BUILD_DIR=$CODEBUILD_SRC_DIR/build
       - IMAGES_DIR=$CODEBUILD_SRC_DIR/images
+      - BUILD_TAG_NAME=devel
       # build spark-runtime images
       - SPARK_DIR=$IMAGES_DIR/spark
-      - DLTK_SPARK_RUNTIME_DRIVER_IMAGE=$DOCKER_ACCOUNT/spark-runtime:driver-thin
-      - DLTK_SPARK_RUNTIME_EXECUTOR_IMAGE=$DOCKER_ACCOUNT/spark-runtime:executor-thin
-      - DLTK_SPARK_RUNTIME_DRIVER_PROXY_IMAGE=$DOCKER_ACCOUNT/spark-runtime:driver-proxy
-      - DLTK_SPARK_RUNTIME_EDITOR_IMAGE=$DOCKER_ACCOUNT/spark-runtime:editor-thin
-      - DLTK_SPARK_RUNTIME_INBOUND_RELAY_IMAGE=$DOCKER_ACCOUNT/spark-runtime:inbound-relay
-      - DLTK_SPARK_RUNTIME_OUTBOUND_RELAY_IMAGE=$DOCKER_ACCOUNT/spark-runtime:outbound-relay
+      - DLTK_SPARK_RUNTIME_DRIVER_IMAGE=$DOCKER_ACCOUNT/spark-runtime-driver:$BUILD_TAG_NAME
+      - DLTK_SPARK_RUNTIME_EXECUTOR_IMAGE=$DOCKER_ACCOUNT/spark-runtime-executor:$BUILD_TAG_NAME
+      - DLTK_SPARK_RUNTIME_DRIVER_PROXY_IMAGE=$DOCKER_ACCOUNT/spark-runtime-driver-proxy:$BUILD_TAG_NAME
+      - DLTK_SPARK_RUNTIME_EDITOR_IMAGE=$DOCKER_ACCOUNT/spark-runtime-editor::$BUILD_TAG_NAME
+      - DLTK_SPARK_RUNTIME_INBOUND_RELAY_IMAGE=$DOCKER_ACCOUNT/spark-runtime-inbound-relay:$BUILD_TAG_NAME
+      - DLTK_SPARK_RUNTIME_OUTBOUND_RELAY_IMAGE=$DOCKER_ACCOUNT/spark-runtime-outbound-relay:$BUILD_TAG_NAME
       - cd $SPARK_DIR
       - docker build --rm -f "./driver/thin.Dockerfile" -t $DLTK_SPARK_RUNTIME_DRIVER_IMAGE .
       - docker build --rm -f "./driver/thin.Dockerfile" -t $DLTK_SPARK_RUNTIME_EXECUTOR_IMAGE .
@@ -31,8 +31,46 @@ phases:
       - BASE_DIR=$IMAGES_DIR/base
       - cd $BASE_DIR
       - ./build.sh golden-image-gpu-4 phdrieger/ 4.0.0
-      - DLTK_BASE_RUNTIME_IMAGE=$DOCKER_ACCOUNT/base-runtime:goldengpu
+      - DLTK_BASE_RUNTIME_IMAGE=$DOCKER_ACCOUNT/base-runtime:$BUILD_TAG_NAME
       - docker tag phdrieger/mltk-container-golden-image-gpu-4:4.0.0 $DLTK_BASE_RUNTIME_IMAGE
+      - |
+        if [ -n "$DOCKER_PASSWORD" ]; then
+          set -e
+          set -x
+          echo $DOCKER_PASSWORD | docker login --username $DOCKER_ACCOUNT --password-stdin
+          docker push $DLTK_SPARK_RUNTIME_DRIVER_IMAGE
+          docker push $DLTK_SPARK_RUNTIME_EXECUTOR_IMAGE
+          docker push $DLTK_SPARK_RUNTIME_DRIVER_PROXY_IMAGE
+          docker push $DLTK_SPARK_RUNTIME_EDITOR_IMAGE
+          docker push $DLTK_SPARK_RUNTIME_INBOUND_RELAY_IMAGE
+          docker push $DLTK_SPARK_RUNTIME_OUTBOUND_RELAY_IMAGE
+          docker push $DLTK_BASE_RUNTIME_IMAGE
+          if [ -n "$CODEBUILD_SOURCE_VERSION" ]; then
+            DLTK_SPARK_RUNTIME_DRIVER_IMAGE_VERSIONED="${DLTK_SPARK_RUNTIME_DRIVER_IMAGE/$BUILD_TAG_NAME/$CODEBUILD_SOURCE_VERSION}"
+            DLTK_SPARK_RUNTIME_EXECUTOR_IMAGE_VERSIONED="${DLTK_SPARK_RUNTIME_EXECUTOR_IMAGE/$BUILD_TAG_NAME/$CODEBUILD_SOURCE_VERSION}"
+            DLTK_SPARK_RUNTIME_DRIVER_PROXY_IMAGE_VERSIONED="${DLTK_SPARK_RUNTIME_DRIVER_PROXY_IMAGE/$BUILD_TAG_NAME/$CODEBUILD_SOURCE_VERSION}"
+            DLTK_SPARK_RUNTIME_EDITOR_IMAGE_VERSIONED="${DLTK_SPARK_RUNTIME_EDITOR_IMAGE/$BUILD_TAG_NAME/$CODEBUILD_SOURCE_VERSION}"
+            DLTK_SPARK_RUNTIME_INBOUND_RELAY_IMAGE_VERSIONED="${DLTK_SPARK_RUNTIME_INBOUND_RELAY_IMAGE/$BUILD_TAG_NAME/$CODEBUILD_SOURCE_VERSION}"
+            DLTK_SPARK_RUNTIME_OUTBOUND_RELAY_IMAGE_VERSIONED="${DLTK_SPARK_RUNTIME_OUTBOUND_RELAY_IMAGE/$BUILD_TAG_NAME/$CODEBUILD_SOURCE_VERSION}"
+            DLTK_BASE_RUNTIME_IMAGE_VERSIONED="${DLTK_BASE_RUNTIME_IMAGE/$BUILD_TAG_NAME/$CODEBUILD_SOURCE_VERSION}"
+            docker tag $DLTK_SPARK_RUNTIME_DRIVER_IMAGE $DLTK_SPARK_RUNTIME_DRIVER_IMAGE_VERSIONED
+            docker tag $DLTK_SPARK_RUNTIME_EXECUTOR_IMAGE $DLTK_SPARK_RUNTIME_EXECUTOR_IMAGE_VERSIONED
+            docker tag $DLTK_SPARK_RUNTIME_DRIVER_PROXY_IMAGE $DLTK_SPARK_RUNTIME_DRIVER_PROXY_IMAGE_VERSIONED
+            docker tag $DLTK_SPARK_RUNTIME_EDITOR_IMAGE $DLTK_SPARK_RUNTIME_EDITOR_IMAGE_VERSIONED
+            docker tag $DLTK_SPARK_RUNTIME_DRIVER_IMAGE $DLTK_SPARK_RUNTIME_INBOUND_RELAY_IMAGE_VERSIONED
+            docker tag $DLTK_SPARK_RUNTIME_OUTBOUND_RELAY_IMAGE $DLTK_SPARK_RUNTIME_OUTBOUND_RELAY_IMAGE_VERSIONED
+            docker tag $DLTK_BASE_RUNTIME_IMAGE_ $DLTK_BASE_RUNTIME_IMAGE_VERSIONED
+            docker push $DLTK_SPARK_RUNTIME_DRIVER_IMAGE_VERSIONED
+            docker push $DLTK_SPARK_RUNTIME_EXECUTOR_IMAGE_VERSIONED
+            docker push $DLTK_SPARK_RUNTIME_DRIVER_PROXY_IMAGE_VERSIONED
+            docker push $DLTK_SPARK_RUNTIME_EDITOR_IMAGE_VERSIONED
+            docker push $DLTK_SPARK_RUNTIME_INBOUND_RELAY_IMAGE_VERSIONED
+            docker push $DLTK_SPARK_RUNTIME_OUTBOUND_RELAY_IMAGE_VERSIONED
+            docker push $DLTK_BASE_RUNTIME_IMAGE_VERSIONED
+          if
+        else
+          echo 'Not pushing'
+        fi
       # Install K3D
       - wget -q -O - https://raw.githubusercontent.com/rancher/k3d/main/install.sh | bash
       # Install HELM
@@ -147,18 +185,3 @@ phases:
   post_build:
     commands:
       - k3d cluster delete dltkbuild
-      - |
-        if [ -n "$DOCKER_PASSWORD" ]; then
-          set -e
-          set -x
-          echo $DOCKER_PASSWORD | docker login --username $DOCKER_ACCOUNT --password-stdin
-          docker push $DLTK_SPARK_RUNTIME_DRIVER_IMAGE
-          docker push $DLTK_SPARK_RUNTIME_EXECUTOR_IMAGE
-          docker push $DLTK_SPARK_RUNTIME_DRIVER_PROXY_IMAGE
-          docker push $DLTK_SPARK_RUNTIME_EDITOR_IMAGE
-          docker push $DLTK_SPARK_RUNTIME_INBOUND_RELAY_IMAGE
-          docker push $DLTK_SPARK_RUNTIME_OUTBOUND_RELAY_IMAGE
-          docker push $DLTK_BASE_RUNTIME_IMAGE
-        else
-          echo 'Not pushing'
-        fi

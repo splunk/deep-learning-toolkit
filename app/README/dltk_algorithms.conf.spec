@@ -42,9 +42,17 @@ source_code = <string>
 * As example this can be a ipynb jupyter notebook json code or python code or any other source code
 * Optional.
 
+source_code_version = <number>
+* Contains the source code version number of the algorithm
+* Automatically generated number
+
 deployment_code = <string>
+* Contains deployment code that is extracted from ipynb notebook as python module (obsolete due to sync mechanism)
 * Optional.
 
+default_method = <string>
+* Set a default method for an algorithm
+* Optional.
 
 [<algorithm_name>:<method_name>]
 

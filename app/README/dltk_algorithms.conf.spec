@@ -47,7 +47,12 @@ source_code_version = <string>
 * Typically, this is used by the runtime to syncronize the source code between the Search Head and the deployed algorithm.
 * Optional.
 
+source_code_version = <number>
+* Contains the source code version number of the algorithm
+* Automatically generated number
+
 deployment_code = <string>
+* Contains deployment code that is extracted from ipynb notebook as python module (obsolete due to sync mechanism)
 * Optional.
 
 deployment_code_version = <string>
@@ -56,7 +61,7 @@ deployment_code_version = <string>
 * Optional.
 
 default_method = <string>
-* Name of the algorithm method to per default (in case the method name is not provides).
+* Name of the algorithm method to per default (in case the method name is not provided).
 * Optional.
 
 [<algorithm_name>:<method_name>]

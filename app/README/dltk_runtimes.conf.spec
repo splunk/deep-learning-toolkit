@@ -1,5 +1,13 @@
 [<uniqueName>]
 
+deployment_params = <param_name>, <param_name>, ...
+* Name of Deployment parameters users can configure values in UI
+* Optional.
+
+algorithm_params = <param_name>, <param_name>, ...
+* Name of Algorithm parameters users can configure values in UI
+* Optional.
+
 handler = <string>
 * Name of the Python class implementing the low level parameter handling.
 * A typical runtime does not need to specify this.
@@ -52,5 +60,121 @@ executor_instance_count = <number>
 * Defaults to 2
 
 executor_cores = <number>
-* Number of CPU cores for Spark executors,
-* Defaults to 2
+* Number of CPU cores for Spark executors.
+* Required.
+
+editor_cpu_request = <number>
+* Number of CPU cores to request for the editor.
+* Required.
+
+editor_cpu_limit = <number>
+* Number of CPU cores (as limit) for the editor.
+* Required.
+
+editor_memory_mb = <number>
+* Memory to request (in MB) for the editor.
+* Required.
+
+editor_image = <imageref>
+* Container image for the editor.
+* Syntax: [hostname[:port]/]username/reponame[:tag]
+* Required.
+
+driver_image = <imageref>
+* Container image for the driver.
+* Syntax: [hostname[:port]/]username/reponame[:tag]
+* Required.
+
+driver_proxy_image = <imageref>
+* Container image for the driver proxy.
+* Syntax: [hostname[:port]/]username/reponame[:tag]
+* Required.
+
+driver_memory_mb = <number>
+* Memory to request (in MB) for the driver.
+* Required.
+
+inbound_relay_cpu_request = <number>
+* Number of CPU cores to request for the inbound relay.
+* Required.
+
+inbound_relay_cpu_limit = <number>
+* Number of CPU cores (as limit) for the inbound relay.
+* Required.
+
+inbound_relay_memory_mb = <number>
+* Memory to request (in MB) for the inbound relay.
+* Required.
+
+inbound_relay_image = <imageref>
+* Container image for the inbound relay.
+* Syntax: [hostname[:port]/]username/reponame[:tag]
+* Required.
+
+outbound_relay_cpu_request = <number>
+* Number of CPU cores to request for the outbound relay.
+* Required.
+
+outbound_relay_cpu_limit = <number>
+* Number of CPU cores (as limit) for the outbound relay.
+* Required.
+
+outbound_relay_memory_mb = <number>
+* Memory to request (in MB) for the outbound relay.
+* Required.
+
+outbound_relay_image = <imageref>
+* Container image for the outbound relay.
+* Syntax: [hostname[:port]/]username/reponame[:tag]
+* Required.
+
+executor_memory_mb = <number>
+* Memory to request (in MB) for the executor.
+* Required.
+
+executor_image = <imageref>
+* Container image for the executor.
+* Syntax: [hostname[:port]/]username/reponame[:tag]
+* Required.
+
+spark_hdfs_url = <url>
+* Container image for the executor.
+* Syntax: [hostname[:port]/]username/reponame[:tag]
+* Required.
+
+relay_hdfs_url = <url>
+
+spark_service_account
+
+checkpoint_url = <url>
+
+checkpoint_s3_access_key = <string>
+
+checkpoint_s3_secret_key = <string>
+
+receiver_count = <number>
+* Number of Spark receivers.
+* Required.
+
+batch_interval = <number>
+
+spark_service_account = <string>
+
+[base]
+
+image = <imageref>
+* Container image.
+* Syntax: [hostname[:port]/]username/reponame[:tag]
+* Required.
+
+cpu_count = <number>
+* Number of CPU cores to request for the container.
+* Required.
+
+memory_mb = <number>
+* Memory to request (in MB) for the container.
+* Required.
+
+store_models_in_volume = <bool>
+* Whether or not to store models on a volume.
+* Required.

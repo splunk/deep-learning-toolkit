@@ -13,3 +13,9 @@ status_message = <string>
 
 editor_url = <string>
 * URL of the an editor for the algorithm source code.
+
+editable = <bool>
+* TODO
+
+restart_required = <bool>
+* TODO

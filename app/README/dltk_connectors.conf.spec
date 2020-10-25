@@ -1,4 +1,5 @@
-[default]
+
+[<connector_name>>]
 handler = <string>
 environment_handler = <string>
 environment_params = <string>

@@ -29,7 +29,6 @@ phases:
       # https://github.com/jcmoraisjr/haproxy-ingress/blob/v0.6/README.md#rewrite-target
       - HAPROXY=/haproxy
       - mkdir $HAPROXY
-      - helm repo add incubator https://charts.helm.sh/incubator
       - helm template haproxy incubator/haproxy-ingress --namespace default --set-string "controller.config.ssl-redirect=false" --output-dir=$HAPROXY
       # Install Packaging Toolkit
       - cd /tmp

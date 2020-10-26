@@ -10,4 +10,6 @@ BUILD_DIR="$( cd -P "$( dirname "$SOURCE" )" >/dev/null 2>&1 && pwd )"
 PROJECT_DIR=$(dirname "$BUILD_DIR")
 ARTIFACT_DIR="$BUILD_DIR/artifact"
 
+set -e
+
 codebuild_build.sh -i aws/codebuild/standard:4.0 -a "$ARTIFACT_DIR" -s "$PROJECT_DIR" -b "$BUILD_DIR/buildspec.yml"

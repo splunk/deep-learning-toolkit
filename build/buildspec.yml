@@ -11,35 +11,7 @@ phases:
     commands:
       - BUILD_DIR=$CODEBUILD_SRC_DIR/build
       - IMAGES_DIR=$CODEBUILD_SRC_DIR/images
-      - BUILD_TAG_NAME=devel
-      # build spark-runtime images
-      - SPARK_DIR=$IMAGES_DIR/spark
-      - DLTK_SPARK_RUNTIME_DRIVER_IMAGE_BASE=$DOCKER_ACCOUNT/spark-runtime-driver
-      - DLTK_SPARK_RUNTIME_EXECUTOR_IMAGE_BASE=$DOCKER_ACCOUNT/spark-runtime-executor
-      - DLTK_SPARK_RUNTIME_DRIVER_PROXY_IMAGE_BASE=$DOCKER_ACCOUNT/spark-runtime-driver-proxy
-      - DLTK_SPARK_RUNTIME_EDITOR_IMAGE_BASE=$DOCKER_ACCOUNT/spark-runtime-editor
-      - DLTK_SPARK_RUNTIME_INBOUND_RELAY_IMAGE_BASE=$DOCKER_ACCOUNT/spark-runtime-inbound-relay
-      - DLTK_SPARK_RUNTIME_OUTBOUND_RELAY_IMAGE_BASE=$DOCKER_ACCOUNT/spark-runtime-outbound-relay
-      - DLTK_SPARK_RUNTIME_DRIVER_IMAGE=$DLTK_SPARK_RUNTIME_DRIVER_IMAGE_BASE:$BUILD_TAG_NAME
-      - DLTK_SPARK_RUNTIME_EXECUTOR_IMAGE=$DLTK_SPARK_RUNTIME_EXECUTOR_IMAGE_BASE:$BUILD_TAG_NAME
-      - DLTK_SPARK_RUNTIME_DRIVER_PROXY_IMAGE=$DLTK_SPARK_RUNTIME_DRIVER_PROXY_IMAGE_BASE:$BUILD_TAG_NAME
-      - DLTK_SPARK_RUNTIME_EDITOR_IMAGE=$DLTK_SPARK_RUNTIME_EDITOR_IMAGE_BASE:$BUILD_TAG_NAME
-      - DLTK_SPARK_RUNTIME_INBOUND_RELAY_IMAGE=$DLTK_SPARK_RUNTIME_INBOUND_RELAY_IMAGE_BASE:$BUILD_TAG_NAME
-      - DLTK_SPARK_RUNTIME_OUTBOUND_RELAY_IMAGE=$DLTK_SPARK_RUNTIME_OUTBOUND_RELAY_IMAGE_BASE:$BUILD_TAG_NAME
-      - cd $SPARK_DIR
-      - docker build --rm -f "./driver/thin.Dockerfile" -t $DLTK_SPARK_RUNTIME_DRIVER_IMAGE .
-      - docker build --rm -f "./driver/thin.Dockerfile" -t $DLTK_SPARK_RUNTIME_EXECUTOR_IMAGE .
-      - docker build --rm -f "./driver-proxy/Dockerfile" -t $DLTK_SPARK_RUNTIME_DRIVER_PROXY_IMAGE .
-      - docker build --rm -f "./editor/thin.Dockerfile" -t $DLTK_SPARK_RUNTIME_EDITOR_IMAGE .
-      - docker build --rm -f "./inbound-relay/Dockerfile" -t $DLTK_SPARK_RUNTIME_INBOUND_RELAY_IMAGE .
-      - docker build --rm -f "./outbound-relay/Dockerfile" -t $DLTK_SPARK_RUNTIME_OUTBOUND_RELAY_IMAGE .
-      # build base-runtime images
-      - BASE_DIR=$IMAGES_DIR/base
-      - cd $BASE_DIR
-      - ./build.sh golden-image-gpu-4 phdrieger/ 4.0.0
-      - DLTK_BASE_RUNTIME_IMAGE_BASE=$DOCKER_ACCOUNT/base-runtime
-      - DLTK_BASE_RUNTIME_IMAGE=$DLTK_BASE_RUNTIME_IMAGE_BASE:$BUILD_TAG_NAME
-      - docker tag phdrieger/mltk-container-golden-image-gpu-4:4.0.0 $DLTK_BASE_RUNTIME_IMAGE
+      - APP_DIR=$CODEBUILD_SRC_DIR/app
       # Install K3D
       - wget -q -O - https://raw.githubusercontent.com/rancher/k3d/main/install.sh | bash
       # Install HELM
@@ -59,8 +31,23 @@ phases:
       - mkdir $HAPROXY
       - helm repo add ingress-nginx https://kubernetes-charts-incubator.storage.googleapis.com
       - helm template haproxy incubator/haproxy-ingress --namespace default --set-string "controller.config.ssl-redirect=false" --output-dir=$HAPROXY
+      # Install Packaging Toolkit
+      - cd /tmp
+      - pip install semantic_version
+      - wget https://download.splunk.com/misc/packaging-toolkit/splunk-packaging-toolkit-1.0.1.tar.gz
+      - pip install splunk-packaging-toolkit-1.0.1.tar.gz
+      # Install AppInspect
+      - cd /tmp
+      - wget https://download.splunk.com/misc/appinspect/splunk-appinspect-latest.tar.gz
+      - pip install splunk-appinspect-latest.tar.gz
   build:
     commands:
+      # build (package and inspect) Splunk app
+      - DLTK_PACKAGE="/tmp/dltk.tar.gz"
+      - $BUILD_DIR/build_app.bash $DLTK_PACKAGE
+      # build spark-runtime images
+      - BUILD_TAG_NAME=devel
+      - $BUILD_DIR/build_images.bash dltk4splunk $BUILD_TAG_NAME
       # Start Kubernetes Cluster (https://k3d.io/usage/commands/)
       - k3d cluster delete dltkbuild || true
       - k3d cluster create dltkbuild --wait --agents 0
@@ -104,10 +91,13 @@ phases:
       - cat $BUILD_DIR/splunk_operator_for_kubernetes.yaml | docker run --network=container:$K3D_ID --rm -e "KUBECONFIG=/tmp/.kube/config" -i kubectl apply -f -
       # Start Splunk
       - cat $BUILD_DIR/splunk_environment.yaml | docker run --network=container:$K3D_ID --rm -e "KUBECONFIG=/tmp/.kube/config" -i kubectl apply -f -
-      # Import base-runtime images
-      - k3d image import $DLTK_BASE_RUNTIME_IMAGE -c dltkbuild
-      # Import Spark images
-      - k3d image import $DLTK_SPARK_RUNTIME_DRIVER_IMAGE $DLTK_SPARK_RUNTIME_EXECUTOR_IMAGE $DLTK_SPARK_RUNTIME_DRIVER_PROXY_IMAGE $DLTK_SPARK_RUNTIME_EDITOR_IMAGE $DLTK_SPARK_RUNTIME_OUTBOUND_RELAY_IMAGE $DLTK_SPARK_RUNTIME_INBOUND_RELAY_IMAGE -c dltkbuild
+      # Import runtime images
+      - |
+        set -e
+        set -x
+        . $BUILD_DIR/set_image_refs.bash
+        k3d image import $DLTK_BASE_RUNTIME_IMAGE -c dltkbuild
+        k3d image import $DLTK_SPARK_RUNTIME_DRIVER_IMAGE $DLTK_SPARK_RUNTIME_EXECUTOR_IMAGE $DLTK_SPARK_RUNTIME_DRIVER_PROXY_IMAGE $DLTK_SPARK_RUNTIME_EDITOR_IMAGE $DLTK_SPARK_RUNTIME_OUTBOUND_RELAY_IMAGE $DLTK_SPARK_RUNTIME_INBOUND_RELAY_IMAGE -c dltkbuild
       # Wait for Spark Operator
       - echo "waiting for Spark operator ..."; docker run --network=container:$K3D_ID --rm -e "KUBECONFIG=/tmp/.kube/config" kubectl wait --for=condition=available --timeout=5m deployment/sparkoperator
       # Wait for HDFS
@@ -118,18 +108,6 @@ phases:
       # Wait for Splunk
       - echo "waiting for Splunk ..."; while [ "$(docker run --network=container:$K3D_ID --rm -e "KUBECONFIG=/tmp/.kube/config" kubectl get standalone dltk -o 'jsonpath={..status.phase}')" != "Ready" ]; do sleep 1; done
       - SPLUNK_ADMIN_PASSWORD="$(docker run --network=container:$K3D_ID --rm -e KUBECONFIG=/tmp/.kube/config kubectl get secret splunk-dltk-standalone-secrets -o jsonpath='{.data.password}' | base64 --decode)"
-      # Package DLTK
-      - pip install semantic_version
-      - wget https://download.splunk.com/misc/packaging-toolkit/splunk-packaging-toolkit-1.0.1.tar.gz
-      - pip install splunk-packaging-toolkit-1.0.1.tar.gz
-      - DLTK_PACKAGE_DIR=/dltk_build
-      - mkdir $DLTK_PACKAGE_DIR
-      # https://dev.splunk.com/enterprise/docs/releaseapps/packagingtoolkit/pkgtoolkitref/packagingtoolkitcli#slim-package
-      - mv $CODEBUILD_SRC_DIR/app $CODEBUILD_SRC_DIR/dltk
-      - slim package -o $DLTK_PACKAGE_DIR $CODEBUILD_SRC_DIR/dltk
-      - mv $CODEBUILD_SRC_DIR/dltk $CODEBUILD_SRC_DIR/app
-      - DLTK_PACKAGE=$(find $DLTK_PACKAGE_DIR -maxdepth 1 -type f -name '*.tar.gz')
-      - DLTK_PACKAGE_NAME=$(basename $DLTK_PACKAGE)
       # Install DLTK
       - TARGET_SPLUNK_POD_NAME="splunk-dltk-standalone-0"
       - cat $DLTK_PACKAGE | docker run --network=container:$K3D_ID -i --rm -e KUBECONFIG=/tmp/.kube/config kubectl exec -i $TARGET_SPLUNK_POD_NAME -- /bin/bash -c 'cat > /tmp/dltk.tgz'

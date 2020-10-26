@@ -2,7 +2,9 @@
 
 This guide is intended for DLTK developers and anyone who wants to build the DLTK app as well as the container images required by DLTK runtimes.
 
-The [`build`](../../build) folder, located in the root of this repository, contains a AWS CodeBuild specification. It contains all the steps required for setting up the environment, building and testing DLTK:
+The [`build`](../../build) folder, located in the root of this repository, contains scripts and artefacts for building DLTK.
+
+That includes a AWS CodeBuild specification containing all the steps required for building and testing DLTK:
 
 - Building runtime container images
 - Packaging the DLTK Splunk app

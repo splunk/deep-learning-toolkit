@@ -27,29 +27,13 @@ class TUDPTransport(TTransportBase, object):
     to work for blindly sending UDP packets.
     """
     def __init__(self, host, port, blocking=False):
-        self.transport_host = host
-        self.transport_port = port
-        self.transport_sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        if blocking:
-            blocking = 1
-        else:
-            blocking = 0
-        self.transport_sock.setblocking(blocking)
+        pass
 
     def write(self, buf):
-        """Raw write to the UDP socket."""
-        return self.transport_sock.sendto(
-            buf,
-            (self.transport_host, self.transport_port)
-        )
+        pass
 
     def isOpen(self):
-        """
-        isOpen for UDP is always true (there is no connection) as long
-        as we have a sock
-        """
-        return self.transport_sock is not None
+        pass
 
     def close(self):
-        self.transport_sock.close()
-        self.transport_sock = None
+        pass

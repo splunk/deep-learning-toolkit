@@ -34,12 +34,17 @@ command_type = [streaming|stateful|events|reporting]
 * Defaults to 'reporting'
 
 support_preop = <boolean>
-* Whether or not to support 'streaming' pre-op for 'reporting' commands
+* Whether or not to support 'streaming' pre-op for 'reporting' commands.
 * Defaults to false.
 
 source_code = <string>
-* Contains the source code of the algorithm
-* As example this can be a ipynb jupyter notebook json code or python code or any other source code
+* The source code of the algorithm.
+* As example this can be a ipynb jupyter notebook json code or python code or any other source code.
+* Optional.
+
+source_code_version = <string>
+* Version of the algorithm source code.
+* Typically, this is used by the runtime to syncronize the source code between the Search Head and the deployed algorithm.
 * Optional.
 
 source_code_version = <number>
@@ -50,8 +55,13 @@ deployment_code = <string>
 * Contains deployment code that is extracted from ipynb notebook as python module (obsolete due to sync mechanism)
 * Optional.
 
+deployment_code_version = <string>
+* Version of the deployment code.
+* Typically, this is used by the runtime to syncronize the deployment code between the Search Head and the deployed algorithm.
+* Optional.
+
 default_method = <string>
-* Set a default method for an algorithm
+* Name of the algorithm method to per default (in case the method name is not provided).
 * Optional.
 
 [<algorithm_name>:<method_name>]

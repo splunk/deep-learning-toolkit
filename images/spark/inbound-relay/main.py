@@ -39,7 +39,7 @@ if __name__ == "__main__":
     tracer = create_tracer(
         config=tracer_config,
         service_name="spark-inbound-relay",
-        validate=True,
+        #validate=True,
     )
 
     hdfs_path = os.environ.get("HDFS_PATH", "")

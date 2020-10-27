@@ -98,6 +98,7 @@ class DeleteEnvironmentTest(unittest.TestCase):
         )
 
 
+@skip_if_required()
 class EnvironmentParamsTest(unittest.TestCase):
 
     @classmethod

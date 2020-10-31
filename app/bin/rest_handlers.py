@@ -11,6 +11,7 @@ if lib_path not in sys.path:
 # Register REST handlers.
 # Splunk requires them to be available in a top-level python module.
 # See https://docs.splunk.com/Documentation/Splunk/latest/admin/restmapconf: (handler=<SCRIPT>.<CLASSNAME>)
+# The import statements below import the REST handlers into this module.
 
 from dltk.core.connector.connector_handlers import *
 from dltk.core.algorithm.algorithm_handlers import *

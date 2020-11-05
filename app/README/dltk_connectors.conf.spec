@@ -20,6 +20,7 @@ aws_access_key_id = <string>
 aws_cluster_name = <string>
 aws_region_name = <string>
 aws_secret_access_key = <string>
+
 ingress_url = <string>
 ingress_class = <string>
 ingress_mode = [ingress|load-balancer|node-port|route]

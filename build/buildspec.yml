@@ -115,7 +115,7 @@ phases:
       - docker run --network=container:$K3D_ID --rm -e KUBECONFIG=/tmp/.kube/config kubectl exec $TARGET_SPLUNK_POD_NAME -- /opt/splunk/bin/splunk restart
       # Run tests
       - cd $CODEBUILD_SRC_DIR
-      - tar -czvf /tmp/source.tar.gz *
+      - tar -czf /tmp/source.tar.gz *
       - docker run --network=container:$K3D_ID --rm -e KUBECONFIG=/tmp/.kube/config kubectl exec $TARGET_SPLUNK_POD_NAME -- mkdir /tmp/source
       - cat "/tmp/source.tar.gz" | docker run --network=container:$K3D_ID -i --rm -e KUBECONFIG=/tmp/.kube/config kubectl exec -i $TARGET_SPLUNK_POD_NAME -- /bin/bash -c 'cat > /tmp/source.tar.gz'
       - docker run --network=container:$K3D_ID --rm -e KUBECONFIG=/tmp/.kube/config kubectl exec $TARGET_SPLUNK_POD_NAME -- tar zxf /tmp/source.tar.gz -C /tmp/source
@@ -128,9 +128,6 @@ phases:
       - echo "$DLTK_SPARK_RUNTIME_INBOUND_RELAY_IMAGE" | docker run --network=container:$K3D_ID -i --rm -e KUBECONFIG=/tmp/.kube/config kubectl exec -i $TARGET_SPLUNK_POD_NAME -- /bin/bash -c 'cat > /tmp/DLTK_SPARK_RUNTIME_INBOUND_RELAY_IMAGE'
       - echo "$DLTK_SPARK_RUNTIME_OUTBOUND_RELAY_IMAGE" | docker run --network=container:$K3D_ID -i --rm -e KUBECONFIG=/tmp/.kube/config kubectl exec -i $TARGET_SPLUNK_POD_NAME -- /bin/bash -c 'cat > /tmp/DLTK_SPARK_RUNTIME_OUTBOUND_RELAY_IMAGE'
       - docker run --network=container:$K3D_ID --rm -e KUBECONFIG=/tmp/.kube/config kubectl exec $TARGET_SPLUNK_POD_NAME -- /bin/bash -c 'SPLUNK_PASSWORD="$(cat /tmp/SPLUNK_ADMIN_PASSWORD)" DLTK_BASE_RUNTIME_IMAGE="$(cat /tmp/DLTK_BASE_RUNTIME_IMAGE)" DLTK_SPARK_RUNTIME_DRIVER_IMAGE="$(cat /tmp/DLTK_SPARK_RUNTIME_DRIVER_IMAGE)" DLTK_SPARK_RUNTIME_EXECUTOR_IMAGE="$(cat /tmp/DLTK_SPARK_RUNTIME_EXECUTOR_IMAGE)" DLTK_SPARK_RUNTIME_DRIVER_PROXY_IMAGE="$(cat /tmp/DLTK_SPARK_RUNTIME_DRIVER_PROXY_IMAGE)" DLTK_SPARK_RUNTIME_EDITOR_IMAGE="$(cat /tmp/DLTK_SPARK_RUNTIME_EDITOR_IMAGE)" DLTK_SPARK_RUNTIME_INBOUND_RELAY_IMAGE="$(cat /tmp/DLTK_SPARK_RUNTIME_INBOUND_RELAY_IMAGE)" DLTK_SPARK_RUNTIME_OUTBOUND_RELAY_IMAGE="$(cat /tmp/DLTK_SPARK_RUNTIME_OUTBOUND_RELAY_IMAGE)" DLTK_INGRESS_URL="http://haproxy-haproxy-ingress-controller/" DLTK_INGRESS_CLASS="haproxy" DLTK_HDFS_HTTP_URL="http://my-hdfs-namenode:50070" DLTK_HDFS_URL="hdfs://my-hdfs-namenode" DLTK_APP_NAME="dltk" SKIP_TEST_UNLESS_=ListEnvironmentTestCase /opt/splunk/bin/splunk cmd python3 /tmp/source/test/test.py'
-  post_build:
-    commands:
-      - k3d cluster delete dltkbuild
       # Push images
       - |
         set -e
@@ -173,3 +170,6 @@ phases:
         else
           echo 'Not source version pushing'
         fi
+  post_build:
+    commands:
+      - k3d cluster delete dltkbuild

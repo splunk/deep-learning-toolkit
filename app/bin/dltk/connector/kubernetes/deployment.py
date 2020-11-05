@@ -107,14 +107,21 @@ class KubernetesDeployment(Deployment):
 
     def undeploy(self):
         if environment.exists(self.splunk, self.environment_name):
-            self.delete_objects(
-                only_outdated=False,
-                include_volumes=True,
-                include_services=True,
-                include_workloads=True,
-                include_secrets=True,
-                include_ingresses=True,
-            )
+            try:
+                self.delete_objects(
+                    only_outdated=False,
+                    include_volumes=True,
+                    include_services=True,
+                    include_workloads=True,
+                    include_secrets=True,
+                    include_ingresses=True,
+                )
+            except kubernetes_client.rest.ApiException as e:
+                if e.status != 401:
+                    raise
+
+
+
 
     @property
     def api_client(self):
@@ -940,6 +947,9 @@ class KubernetesDeployment(Deployment):
         volume_claim = self.get_volume_claim(labels)
         if not volume_claim:
             self.logger.info("creating volume claim (%s) ..." % name_suffix)
+            storage_class_name = None
+            if self.environment.storage_class:
+                storage_class_name = self.environment.storage_class
             volume_claim = self.core_api.create_namespaced_persistent_volume_claim(
                 namespace=self.environment.namespace,
                 body=kubernetes_client.V1PersistentVolumeClaim(
@@ -957,7 +967,7 @@ class KubernetesDeployment(Deployment):
                                 "storage": "1Gi",
                             },
                         ),
-                        storage_class_name=self.environment.storage_class,
+                        storage_class_name=storage_class_name,
                     ),
                 ),
             )

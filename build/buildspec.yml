@@ -115,7 +115,7 @@ phases:
       - docker run --network=container:$K3D_ID --rm -e KUBECONFIG=/tmp/.kube/config kubectl exec $TARGET_SPLUNK_POD_NAME -- /opt/splunk/bin/splunk restart
       # Run tests
       - cd $CODEBUILD_SRC_DIR
-      - tar -czvf /tmp/source.tar.gz *
+      - tar -czf /tmp/source.tar.gz *
       - docker run --network=container:$K3D_ID --rm -e KUBECONFIG=/tmp/.kube/config kubectl exec $TARGET_SPLUNK_POD_NAME -- mkdir /tmp/source
       - cat "/tmp/source.tar.gz" | docker run --network=container:$K3D_ID -i --rm -e KUBECONFIG=/tmp/.kube/config kubectl exec -i $TARGET_SPLUNK_POD_NAME -- /bin/bash -c 'cat > /tmp/source.tar.gz'
       - docker run --network=container:$K3D_ID --rm -e KUBECONFIG=/tmp/.kube/config kubectl exec $TARGET_SPLUNK_POD_NAME -- tar zxf /tmp/source.tar.gz -C /tmp/source

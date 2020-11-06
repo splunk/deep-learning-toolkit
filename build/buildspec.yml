@@ -41,6 +41,14 @@ phases:
       - pip install splunk-appinspect-latest.tar.gz
   build:
     commands:
+      # login to docker hub
+      - |
+        set -e
+        if [ -n "$DOCKER_PASSWORD" ]; then
+          echo $DOCKER_PASSWORD | docker login --username $DOCKER_ACCOUNT --password-stdin
+        else
+          echo 'Not logging is, because no Docker password provided'
+        fi
       # build (package and inspect) Splunk app
       - DLTK_PACKAGE="/tmp/dltk.tar.gz"
       - $BUILD_DIR/build_app.bash $DLTK_PACKAGE

@@ -6,6 +6,7 @@ import urllib
 import http
 import re
 from dltk.core import environment
+from . import resources
 
 app_label = "app"
 app_name = "dltk"
@@ -119,9 +120,6 @@ class KubernetesDeployment(Deployment):
             except kubernetes_client.rest.ApiException as e:
                 if e.status != 401:
                     raise
-
-
-
 
     @property
     def api_client(self):
@@ -603,14 +601,30 @@ class KubernetesDeployment(Deployment):
                         container.resources.limits["cpu"] = cpu_limit_resources
                         changed = True
                         self.logger.info("cpu_limit_resources limits changed to %s" % cpu_limit_resources)
-                    if "memory" not in container.resources.requests or container.resources.requests["memory"] != memory_resources:
+                    if "memory" not in container.resources.requests:
                         container.resources.requests["memory"] = memory_resources
                         changed = True
-                        self.logger.info("memory_resources requests changed to %s" % memory_resources)
-                    if "memory" not in container.resources.limits or container.resources.limits["memory"] != memory_resources:
+                        self.logger.info("memory_resources was not set. Now set to '%s'" % (
+                            memory_resources,
+                        ))
+                    elif resources.parse_memory(container.resources.requests["memory"]) != resources.parse_memory(memory_resources):
+                        container.resources.requests["memory"] = memory_resources
+                        changed = True
+                        self.logger.info("memory_resources requests changed from '%s' to '%s'" % (
+                            container.resources.requests["memory"],
+                            memory_resources,
+                        ))
+                    if "memory" not in container.resources.limits:
                         container.resources.limits["memory"] = memory_resources
                         changed = True
-                        self.logger.info("memory_resources limits changed to %s" % memory_resources)
+                        self.logger.info("memory_resources limits was not set. Now set to %s" % memory_resources)
+                    elif resources.parse_memory(container.resources.limits["memory"]) != resources.parse_memory(memory_resources):
+                        container.resources.limits["memory"] = memory_resources
+                        changed = True
+                        self.logger.info("memory_resources limits changed from %s to %s" % (
+                            container.resources.limits["memory"],
+                            memory_resources,
+                        ))
             if changed:
                 self.logger.info("patching deployment...")
                 self.apps_api.patch_namespaced_deployment(

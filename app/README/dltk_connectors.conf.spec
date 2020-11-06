@@ -12,7 +12,7 @@ tag_label = <string>
 * Optional.
 
 node_port_url = <string>
-auth_mode = [cert-key|aws-iam|user-token|in-cluster]
+auth_mode = [cert-key|aws-iam|user-token|user-password|in-cluster]
 namespace = <string>
 storage_class = <string>
 node_selector = <string>
@@ -25,3 +25,5 @@ ingress_class = <string>
 ingress_mode = [ingress|load-balancer|node-port|route]
 image_pull_policy = <string>
 image_pull_secret = <string>
+user_name = <string>
+user_password = <string>

@@ -6,6 +6,7 @@ import urllib
 import http
 import re
 from dltk.core import environment
+from . import resources
 
 app_label = "app"
 app_name = "dltk"
@@ -107,14 +108,18 @@ class KubernetesDeployment(Deployment):
 
     def undeploy(self):
         if environment.exists(self.splunk, self.environment_name):
-            self.delete_objects(
-                only_outdated=False,
-                include_volumes=True,
-                include_services=True,
-                include_workloads=True,
-                include_secrets=True,
-                include_ingresses=True,
-            )
+            try:
+                self.delete_objects(
+                    only_outdated=False,
+                    include_volumes=True,
+                    include_services=True,
+                    include_workloads=True,
+                    include_secrets=True,
+                    include_ingresses=True,
+                )
+            except kubernetes_client.rest.ApiException as e:
+                if e.status != 401:
+                    raise
 
     @property
     def api_client(self):
@@ -596,14 +601,30 @@ class KubernetesDeployment(Deployment):
                         container.resources.limits["cpu"] = cpu_limit_resources
                         changed = True
                         self.logger.info("cpu_limit_resources limits changed to %s" % cpu_limit_resources)
-                    if "memory" not in container.resources.requests or container.resources.requests["memory"] != memory_resources:
+                    if "memory" not in container.resources.requests:
                         container.resources.requests["memory"] = memory_resources
                         changed = True
-                        self.logger.info("memory_resources requests changed to %s" % memory_resources)
-                    if "memory" not in container.resources.limits or container.resources.limits["memory"] != memory_resources:
+                        self.logger.info("memory_resources was not set. Now set to '%s'" % (
+                            memory_resources,
+                        ))
+                    elif resources.parse_memory(container.resources.requests["memory"]) != resources.parse_memory(memory_resources):
+                        container.resources.requests["memory"] = memory_resources
+                        changed = True
+                        self.logger.info("memory_resources requests changed from '%s' to '%s'" % (
+                            container.resources.requests["memory"],
+                            memory_resources,
+                        ))
+                    if "memory" not in container.resources.limits:
                         container.resources.limits["memory"] = memory_resources
                         changed = True
-                        self.logger.info("memory_resources limits changed to %s" % memory_resources)
+                        self.logger.info("memory_resources limits was not set. Now set to %s" % memory_resources)
+                    elif resources.parse_memory(container.resources.limits["memory"]) != resources.parse_memory(memory_resources):
+                        container.resources.limits["memory"] = memory_resources
+                        changed = True
+                        self.logger.info("memory_resources limits changed from %s to %s" % (
+                            container.resources.limits["memory"],
+                            memory_resources,
+                        ))
             if changed:
                 self.logger.info("patching deployment...")
                 self.apps_api.patch_namespaced_deployment(
@@ -940,6 +961,9 @@ class KubernetesDeployment(Deployment):
         volume_claim = self.get_volume_claim(labels)
         if not volume_claim:
             self.logger.info("creating volume claim (%s) ..." % name_suffix)
+            storage_class_name = None
+            if self.environment.storage_class:
+                storage_class_name = self.environment.storage_class
             volume_claim = self.core_api.create_namespaced_persistent_volume_claim(
                 namespace=self.environment.namespace,
                 body=kubernetes_client.V1PersistentVolumeClaim(
@@ -957,7 +981,7 @@ class KubernetesDeployment(Deployment):
                                 "storage": "1Gi",
                             },
                         ),
-                        storage_class_name=self.environment.storage_class,
+                        storage_class_name=storage_class_name,
                     ),
                 ),
             )

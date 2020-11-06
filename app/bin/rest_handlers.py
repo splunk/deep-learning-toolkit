@@ -4,10 +4,14 @@ import sys
 bin_path = os.path.abspath(os.path.join(os.path.dirname(__file__)))
 if bin_path not in sys.path:
     sys.path.insert(0, bin_path)
+lib_path = os.path.abspath(os.path.join(os.path.dirname(os.path.dirname(__file__)), "lib"))
+if lib_path not in sys.path:
+    sys.path.insert(0, lib_path)
 
 # Register REST handlers.
 # Splunk requires them to be available in a top-level python module.
 # See https://docs.splunk.com/Documentation/Splunk/latest/admin/restmapconf: (handler=<SCRIPT>.<CLASSNAME>)
+# The import statements below import the REST handlers into this module.
 
 from dltk.core.connector.connector_handlers import *
 from dltk.core.algorithm.algorithm_handlers import *

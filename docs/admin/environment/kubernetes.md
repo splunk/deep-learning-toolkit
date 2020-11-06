@@ -26,6 +26,34 @@ The following steps describe how to connect DLTK to Docker Desktop, running on t
     - Set *Node Port Url* to `http://localhost`
     - Set *Storage Class* to `hostpath`
 
+## MicroK8s
+
+MicroK8s is the smallest, fastest, fully-conformant Kubernetes that tracks upstream releases and makes clustering trivial. MicroK8s is great for offline development, prototyping, and testing. If you want to learn more about MicroK8s, please see the official [MicroK8s](https://microk8s.io/docs) product documentation.
+
+The following steps describe how to connect DLTK to MicroK8s, running on the same host:
+
+1. Download and install MicroK8s for Windows, Linux or MacOS from the official [MicroK8s](https://microk8s.io/) site
+2. Perform the setup on the CLI to start [MicroK8s](https://microk8s.io/docs)
+3. Verify that MicroK8s is running and enable add-ons:
+    - Enable dns and storage with `microk8s enable dns storage`
+    - Optionally, if you have GPU accessible and properly configured you can enable gpu with `microk8s enable gpu`
+    - Enable ingress with `microk8s enable ingress` and modify the ingress configmap using `microk8s kubectl edit configmap -n ingress nginx-load-balancer-microk8s-conf` with the following changes to be added to:
+        - `data:`
+        - `  proxy-body-size: "0"`
+        - `  ssl-redirect: "false"`
+4. Display the *microk8sconfig* with `microk8s config` and use to fill the information in the following step 5
+5. In the *Create Environment* dialog (see [Connect to Environments](README.md)) make sure the following fields are specified:
+    - Set *Auth Mode* to `user-password`
+    - Set *Cluster Url* to the value `server` of your cluster in the *microk8sconfig*, e.g. `https://your-microk8s-host-or-ip-or-localhost:16443`
+    - Set *Cluster Ca* to value of `certificate-authority-data` in the *microk8sconfig*
+    - Set *Ingress Mode* to `ingress`
+    - Set *Ingress Class* to `nginx`
+    - Set *Ingress Url* to the value `server` of your cluster in the *microk8sconfig*, e.g. `http://your-microk8s-host-or-ip-or-localhost` or https if you configure microk8s ingress with certificates
+    - Set *User Name* to value of `username` of your user in *microk8sconfig*
+    - Set *User Password* to value of `password` of your user in *microk8sconfig*
+
+
+
 ## Amazon Elastic Kubernetes Service (EKS)
 
 EKS is a fully managed Kubernetes service.

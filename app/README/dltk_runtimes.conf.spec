@@ -171,6 +171,10 @@ cpu_count = <number>
 * Number of CPU cores to request for the container.
 * Required.
 
+gpu_request = <number>
+* Number of GPU cores to request for the container.
+* Required.
+
 memory_mb = <number>
 * Memory to request (in MB) for the container.
 * Required.

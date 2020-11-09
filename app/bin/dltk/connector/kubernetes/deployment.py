@@ -633,16 +633,24 @@ class KubernetesDeployment(Deployment):
                             memory_resources,
                         ))
                     if "nvidia.com/gpu" not in container.resources.limits:
-                        container.resources.limits["nvidia.com/gpu"] = gpu_limit_resources
-                        changed = True
-                        self.logger.info("gpu_resources limits was not set. Now set to %s" % gpu_limit_resources)
+                        if gpu_limit_resources:
+                            container.resources.limits["nvidia.com/gpu"] = gpu_limit_resources
+                            changed = True
+                            self.logger.info("gpu_resources limits was not set. Now set to %s" % gpu_limit_resources)
                     elif container.resources.limits["nvidia.com/gpu"] != gpu_limit_resources:
-                        container.resources.limits["nvidia.com/gpu"] = gpu_limit_resources
-                        changed = True
-                        self.logger.info("gpu_resources limits changed from %s to %s" % (
-                            container.resources.limits["nvidia.com/gpu"],
-                            gpu_limit_resources,
-                        ))
+                        if gpu_limit_resources:
+                            container.resources.limits["nvidia.com/gpu"] = gpu_limit_resources
+                            changed = True
+                            self.logger.info("gpu_resources limits changed from %s to %s" % (
+                                container.resources.limits["nvidia.com/gpu"],
+                                gpu_limit_resources,
+                            ))
+                        else:
+                            self.logger.info("gpu_resources limits was set to %s but not required anymore" % (
+                                container.resources.limits["nvidia.com/gpu"],
+                            ))
+                            del container.resources.limits["nvidia.com/gpu"]
+                            changed = True
                     if "nvidia.com/gpu" not in container.resources.requests:
                         if gpu_request_resources:
                             container.resources.requests["nvidia.com/gpu"] = gpu_request_resources
@@ -657,7 +665,7 @@ class KubernetesDeployment(Deployment):
                                 gpu_request_resources,
                             ))
                         else:
-                            self.logger.info("gpu_resources requests was set to %s but not require anymore" % (
+                            self.logger.info("gpu_resources requests was set to %s but not required anymore" % (
                                 container.resources.requests["nvidia.com/gpu"],
                             ))
                             del container.resources.requests["nvidia.com/gpu"]

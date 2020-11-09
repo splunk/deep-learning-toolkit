@@ -577,7 +577,7 @@ class KubernetesDeployment(Deployment):
             cpu_request_resources = "%s" % cpu_request
             cpu_limit_resources = "%s" % cpu_limit
         memory_resources = "%sMi" % memory_mb
-        if gpu_request:
+        if gpu_request != None:
             gpu_request_resources = "%s" % gpu_request
             gpu_limit_resources = gpu_request_resources
         else:
@@ -633,12 +633,12 @@ class KubernetesDeployment(Deployment):
                             memory_resources,
                         ))
                     if "nvidia.com/gpu" not in container.resources.limits:
-                        if gpu_limit_resources:
+                        if gpu_limit_resources != None:
                             container.resources.limits["nvidia.com/gpu"] = gpu_limit_resources
                             changed = True
                             self.logger.info("gpu_resources limits was not set. Now set to %s" % gpu_limit_resources)
                     elif container.resources.limits["nvidia.com/gpu"] != gpu_limit_resources:
-                        if gpu_limit_resources:
+                        if gpu_limit_resources  != None:
                             container.resources.limits["nvidia.com/gpu"] = gpu_limit_resources
                             changed = True
                             self.logger.info("gpu_resources limits changed from %s to %s" % (
@@ -652,12 +652,12 @@ class KubernetesDeployment(Deployment):
                             del container.resources.limits["nvidia.com/gpu"]
                             changed = True
                     if "nvidia.com/gpu" not in container.resources.requests:
-                        if gpu_request_resources:
+                        if gpu_request_resources != None:
                             container.resources.requests["nvidia.com/gpu"] = gpu_request_resources
                             changed = True
                             self.logger.info("gpu_resources requests was not set. Now set to %s" % gpu_request_resources)
                     elif container.resources.requests["nvidia.com/gpu"] != gpu_request_resources:
-                        if gpu_request_resources:
+                        if gpu_request_resources != None:
                             container.resources.requests["nvidia.com/gpu"] = gpu_request_resources
                             changed = True
                             self.logger.info("gpu_resources requests changed from %s to %s" % (

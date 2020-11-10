@@ -16,6 +16,17 @@ class BaseDeployment(KubernetesDeployment):
     def store_models_in_volume(self):
         return is_truthy(self.get_param("store_models_in_volume"))
 
+    @property
+    def cpu_count(self):
+        return int(self.get_param("cpu_count"))
+
+    @property
+    def gpu_request(self):
+        value = self.get_param("gpu_request")
+        if not value:
+            return None
+        return int(value)
+
     def __init__(self, splunk, stanza):
         super().__init__(splunk, stanza, "11")
 
@@ -137,7 +148,8 @@ class BaseDeployment(KubernetesDeployment):
 
         return self.deploy_deployment(
             self.get_param("image"),
-            cpu_count=int(self.get_param("cpu_count")),
+            cpu_count=self.cpu_count,
+            gpu_request=self.gpu_request,
             memory_mb=int(self.get_param("memory_mb")),
             ports=[
                 kubernetes_client.V1ContainerPort(

@@ -549,6 +549,7 @@ class KubernetesDeployment(Deployment):
         cpu_count=None,  # deprecated
         cpu_request=1,
         cpu_limit=None,
+        gpu_request=None,
         replicas=1,
         deployment_labels=None,
         pod_labels=None,
@@ -576,6 +577,12 @@ class KubernetesDeployment(Deployment):
             cpu_request_resources = "%s" % cpu_request
             cpu_limit_resources = "%s" % cpu_limit
         memory_resources = "%sMi" % memory_mb
+        if gpu_request != None:
+            gpu_request_resources = "%s" % gpu_request
+            gpu_limit_resources = gpu_request_resources
+        else:
+            gpu_request_resources = None
+            gpu_limit_resources = None
         deployment = self.get_deployment(deployment_labels)
         if deployment:
             changed = False
@@ -625,6 +632,44 @@ class KubernetesDeployment(Deployment):
                             container.resources.limits["memory"],
                             memory_resources,
                         ))
+                    if "nvidia.com/gpu" not in container.resources.limits:
+                        if gpu_limit_resources != None:
+                            container.resources.limits["nvidia.com/gpu"] = gpu_limit_resources
+                            changed = True
+                            self.logger.info("gpu_resources limits was not set. Now set to %s" % gpu_limit_resources)
+                    elif container.resources.limits["nvidia.com/gpu"] != gpu_limit_resources:
+                        if gpu_limit_resources  != None:
+                            container.resources.limits["nvidia.com/gpu"] = gpu_limit_resources
+                            changed = True
+                            self.logger.info("gpu_resources limits changed from %s to %s" % (
+                                container.resources.limits["nvidia.com/gpu"],
+                                gpu_limit_resources,
+                            ))
+                        else:
+                            self.logger.info("gpu_resources limits was set to %s but not required anymore" % (
+                                container.resources.limits["nvidia.com/gpu"],
+                            ))
+                            del container.resources.limits["nvidia.com/gpu"]
+                            changed = True
+                    if "nvidia.com/gpu" not in container.resources.requests:
+                        if gpu_request_resources != None:
+                            container.resources.requests["nvidia.com/gpu"] = gpu_request_resources
+                            changed = True
+                            self.logger.info("gpu_resources requests was not set. Now set to %s" % gpu_request_resources)
+                    elif container.resources.requests["nvidia.com/gpu"] != gpu_request_resources:
+                        if gpu_request_resources != None:
+                            container.resources.requests["nvidia.com/gpu"] = gpu_request_resources
+                            changed = True
+                            self.logger.info("gpu_resources requests changed from %s to %s" % (
+                                container.resources.requests["nvidia.com/gpu"],
+                                gpu_request_resources,
+                            ))
+                        else:
+                            self.logger.info("gpu_resources requests was set to %s but not required anymore" % (
+                                container.resources.requests["nvidia.com/gpu"],
+                            ))
+                            del container.resources.requests["nvidia.com/gpu"]
+                            changed = True
             if changed:
                 self.logger.info("patching deployment...")
                 self.apps_api.patch_namespaced_deployment(
@@ -634,6 +679,20 @@ class KubernetesDeployment(Deployment):
                 )
                 raise deployment_status.StillDeploying("Waiting for %s deployment being patched" % container_name)
         else:
+            resource_requirements = kubernetes_client.V1ResourceRequirements(
+                requests={
+                    "cpu": cpu_request_resources,
+                    "memory": memory_resources,
+                },
+                limits={
+                    "cpu": cpu_limit_resources,
+                    "memory": memory_resources,
+                },
+            )
+            if gpu_request_resources:
+                resource_requirements.requests["nvidia.com/gpu"] = gpu_request_resources
+            if gpu_limit_resources:
+                resource_requirements.limits["nvidia.com/gpu"] = gpu_limit_resources
             self.logger.info("creating %s deployment..." % container_name)
             deployment = self.apps_api.create_namespaced_deployment(
                 namespace=self.environment.namespace,
@@ -660,16 +719,7 @@ class KubernetesDeployment(Deployment):
                                         name=container_name,
                                         image=image,
                                         image_pull_policy=self.environment.image_pull_policy,
-                                        resources=kubernetes_client.V1ResourceRequirements(
-                                            requests={
-                                                "cpu": cpu_request_resources,
-                                                "memory": memory_resources,
-                                            },
-                                            limits={
-                                                "cpu": cpu_limit_resources,
-                                                "memory": memory_resources,
-                                            },
-                                        ),
+                                        resources=resource_requirements,
                                         env=env,
                                         ports=ports,
                                         volume_mounts=volume_mounts,

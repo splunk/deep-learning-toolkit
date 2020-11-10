@@ -19,3 +19,13 @@ editable = <bool>
 
 restart_required = <bool>
 * TODO
+
+cpu_count = <number>
+* Number of CPU cores to be requested for the deployment 
+
+gpu_request = <number>
+* Number of GPUs to be requested for the deployment
+
+runtime_status.api_url = <string>
+* Current state of the deployment API endpoint
+* Typically contains the URL of the API endpoint

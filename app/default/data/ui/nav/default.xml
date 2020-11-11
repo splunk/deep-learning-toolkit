@@ -13,7 +13,7 @@
       <view source="unclassified" match="example_classifier_"/>
     </collection>
     <collection label="Regression">
-      <view source="unclassified" match="example_regression_"/>
+      <view source="unclassified" match="example_regressor_"/>
     </collection>
     <collection label="Forecasting">
       <view source="unclassified" match="example_forecasting_"/>

@@ -57,7 +57,7 @@ class BaseExecution(KubernetesExecution):
             "meta": {
                 "options": {
                     "params": {
-                        "algo": "algo",
+                        "algo": "notebook",
                     }
                 }
             },

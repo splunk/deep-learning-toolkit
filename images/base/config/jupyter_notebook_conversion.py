@@ -23,7 +23,7 @@ def convert(model, os_path):
     # jupyter nbconvert --to python /srv/notebooks/Splunk_MLTK_notebook.ipynb --output-dir /src/models --template=/srv/config/jupyter_notebook_conversion.tpl
     check_call(['jupyter', 'nbconvert', '--to', 'python', nb_filename, '--output-dir', py_path, '--template=' + nb_template], cwd=nb_path)
 
-    if nb_filename == "algo.ipynb":
+    if nb_filename == "notebook.ipynb":
         notebook_version_file = os_path + ".version"
         try:
             with open(notebook_version_file, 'r') as f:

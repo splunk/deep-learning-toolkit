@@ -24,7 +24,7 @@
   <row>
     <panel>
       <html>
-      <img src="/static/app/mltk-container/icons/cluster.png" style="width:5%; height:5%; float:right;"/>
+      <img src="/static/app/$env:app$/icons/cluster.png" style="width:5%; height:5%; float:right;"/>
         <h1>Example for TensorFlow</h1>
         <p>This example shows a simple autoencoder applied to the iris dataset with reconstruction error measurements and retrieval of encoding from the hidden layer.</p>
       </html>

@@ -39,8 +39,10 @@ The following steps describe how to connect DLTK to MicroK8s, running on the sam
     - Optionally, if you have GPU accessible and properly configured you can enable gpu with `microk8s enable gpu`
     - Enable ingress with `microk8s enable ingress` and modify the ingress configmap using `microk8s kubectl edit configmap -n ingress nginx-load-balancer-microk8s-conf` with the following changes to be added to:
         - `data:`
-        - `  proxy-body-size: "0"`
-        - `  ssl-redirect: "false"`
+            - `  proxy-body-size: "0"`
+            - `  proxy-read-timeout: "100000"`
+            - `  proxy-connect-timeout: "100000"`
+            - `  ssl-redirect: "false"`
 4. Display the *microk8sconfig* with `microk8s config` and use to fill the information in the following step 5
 5. In the *Create Environment* dialog (see [Connect to Environments](README.md)) make sure the following fields are specified:
     - Set *Auth Mode* to `user-password`

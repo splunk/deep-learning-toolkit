@@ -1,5 +1,5 @@
-<form>
-  <label>Multiclass Neural Network Classifier</label>
+<form script="plot.js">
+  <label>Explainable Machine Learning with XGBoost and SHAP</label>
   <fieldset submitButton="true">
     <input type="dropdown" token="environment">
       <label>Environment</label>
@@ -12,21 +12,29 @@
         <latest>now</latest>
       </search>
     </input>
-    <input type="dropdown" token="epochs">
-      <label>Epochs</label>
-      <choice value="10">10</choice>
-      <choice value="100">100</choice>
-      <choice value="1000">1000</choice>
-      <choice value="10000">10000</choice>
-      <default>100</default>
+    <input type="text" token="learning_rate">
+      <label>XGBoost Learning Rate</label>
+      <default>0.01</default>
+    </input>
+    <input type="dropdown" token="plot_type">
+      <label>Plot type for SHAP</label>
+      <choice value="default">Default Dots</choice>
+      <choice value="bar">Bar</choice>
+      <choice value="violin">Violin</choice>
+      <choice value="layered_violin">Layered Violin</choice>
+      <default>default</default>
+      <change>
+        <unset token="fit_finalized"></unset>
+        <unset token="plot_matrix"></unset>
+      </change>
     </input>
   </fieldset>
   <row>
     <panel>
       <html>
       <img src="/static/app/$env:app$/icons/classifier.png" style="width:5%; height:5%; float:right;"/>
-        <h1>Example for PyTorch</h1>
-        <p>This example shows a simple neural network example using PyTorch for building a multiclass classifier applied to the favourite iris dataset. The more training epochs you run the model the better classification results get. The notebook is device agnostic and can run both on a CPU or GPU.</p>
+        <h1>Example for XGBoost Classifier and SHAP</h1>
+        <p>This example shows how to introduce explainability in machine learning models with the help of <a href="https://github.com/slundberg/shap">SHAP (SHapley Additive exPlanations)</a>, a game theoretic approach to explain the output of any machine learning model. This is helpful to better understand which features in a model have higher or lower impact on its output.</p>
       </html>
     </panel>
   </row>
@@ -35,15 +43,24 @@
       <title>Dataset Results and Predictions</title>
       <table>
         <search id="base">
-          <query>| inputlookup iris.csv
-| compute algorithm="Multi Class Neural Network Classifier" environment="$environment$" method="fit" fields="species,petal_length,petal_width,sepal_length,sepal_width" feature_variables="petal_length,petal_width,sepal_length,sepal_width" target_variables="species" epochs="$epochs$"
-| rename 0 as species_predicted
-| table species* *</query>
+          <done>
+            <condition match="$job.resultCount$&gt;0">
+              <set token="fit_finalized">diabetes_xgboost_classifier</set>
+            </condition>
+            <condition>
+              <unset token="fit_finalized"></unset>
+            </condition>
+          </done>
+          <query>| inputlookup diabetes.csv
+| compute algorithm="XGBoost Classifier" environment="$environment$" method="fit" learning_rate="$learning_rate$" plot="$plot_type$" target_variables="response" feature_variables="BMI,age,blood_pressure,diabetes_pedigree,glucose_concentration,number_pregnant,serum_insulin,skin_thickness" fields="response,BMI,age,blood_pressure,diabetes_pedigree,glucose_concentration,number_pregnant,serum_insulin,skin_thickness" model_name="diabetes_xgboost_classifier"
+| rename prediction_0 as prediction_raw
+| eval predicted_response=if(predicted_response&gt;0.5,1,0)
+| table response predict* *</query>
           <earliest>-60m@m</earliest>
           <latest>now</latest>
           <sampleRatio>1</sampleRatio>
         </search>
-        <option name="count">5</option>
+        <option name="count">8</option>
         <option name="dataOverlayMode">none</option>
         <option name="drilldown">none</option>
         <option name="percentagesRow">false</option>
@@ -51,23 +68,34 @@
         <option name="rowNumbers">false</option>
         <option name="totalsRow">false</option>
         <option name="wrap">true</option>
-        <format type="color" field="species">
-          <colorPalette type="sharedList"></colorPalette>
-          <scale type="sharedCategory"></scale>
+        <format type="color" field="response">
+          <colorPalette type="map">{"0":#006D9C,"1":#EC9960}</colorPalette>
         </format>
-        <format type="color" field="species_predicted">
-          <colorPalette type="sharedList"></colorPalette>
-          <scale type="sharedCategory"></scale>
+        <format type="color" field="predicted_response">
+          <colorPalette type="map">{"0":#006D9C,"1":#EC9960}</colorPalette>
+        </format>
+        <format type="color" field="prediction_raw">
+          <colorPalette type="minMidMax" maxColor="#EC9960" midColor="#FFFFFF" minColor="#006D9C"></colorPalette>
+          <scale type="minMidMax" maxValue="1" midValue="0.5" minValue="0"></scale>
         </format>
       </table>
+    </panel>
+    <panel depends="$fit_finalized$">
+      <title>SHAP Summary Plot ($plot_type$)</title>
+      <html>
+        <div>
+          <img width="100%" height="100%" id="plot_matrix" src=""/>
+        </div>
+      </html>
     </panel>
   </row>
   <row>
     <panel>
+      <title>Scores by Target Variable (response)</title>
       <chart>
         <search base="base">
           <query>
-| score precision_recall_fscore_support species against species_predicted
+| score precision_recall_fscore_support response against predicted_response
 | search NOT Metric=support
 | transpose 0 header_field=Metric column_name="Metric"</query>
         </search>
@@ -111,8 +139,8 @@
         <search base="base">
           <query>
 | multireport 
-    [| score accuracy_score species against species_predicted ] 
-    [| score precision_recall_fscore_support species against species_predicted average=weighted]
+    [| score accuracy_score response against predicted_response ] 
+    [| score precision_recall_fscore_support response against predicted_response average=weighted]
 | stats avg(accuracy_score) as accuracy avg(precision) as precision avg(recall) as recall avg(fbeta_score) as f1</query>
         </search>
         <option name="colorBy">value</option>
@@ -135,7 +163,7 @@
       </single>
       <table>
         <search base="base">
-          <query>| score confusion_matrix species against species_predicted</query>
+          <query>| score confusion_matrix response against predicted_response</query>
         </search>
         <option name="count">20</option>
         <option name="dataOverlayMode">heatmap</option>
@@ -143,6 +171,42 @@
         <option name="percentagesRow">false</option>
         <option name="refresh.display">progressbar</option>
         <option name="rowNumbers">false</option>
+        <option name="totalsRow">false</option>
+        <option name="wrap">true</option>
+      </table>
+    </panel>
+  </row>
+  <row>
+    <panel depends="$fit_finalized$">
+      <table>
+        <search>
+          <done>
+            <condition match="$job.resultCount$&gt;0">
+              <set token="plot_matrix">$result.plot$</set>
+            </condition>
+            <condition>
+              <unset token="plot_matrix"></unset>
+            </condition>
+          </done>
+          <query>| makeresults count=1 
+| compute algorithm="XGBoost Classifier" environment="$environment$" method="summary" model_name="$fit_finalized$" fields="response,BMI,age,blood_pressure,diabetes_pedigree,glucose_concentration,number_pregnant,serum_insulin,skin_thickness"           
+| spath input=summary output=plot path=model
+| eval text=split(plot,", 'plot_shap'")
+| mvexpand text
+| table text
+| rex field=text "b'(?&lt;plot&gt;.*)'"
+| table plot
+| where isnotnull(plot)</query>
+          <earliest>-24h@h</earliest>
+          <latest>now</latest>
+          <sampleRatio>1</sampleRatio>
+        </search>
+        <option name="count">1</option>
+        <option name="dataOverlayMode">none</option>
+        <option name="drilldown">none</option>
+        <option name="percentagesRow">false</option>
+        <option name="refresh.display">progressbar</option>
+        <option name="rowNumbers">true</option>
         <option name="totalsRow">false</option>
         <option name="wrap">true</option>
       </table>

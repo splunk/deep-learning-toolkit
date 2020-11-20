@@ -52,7 +52,9 @@ WORKDIR /srv
 # Copy bootstrap entry point script
 COPY bootstrap.sh /dltk/
 COPY app /dltk/app
-COPY notebooks /dltk/notebooks
+COPY data /dltk/data
+COPY examples /dltk/examples
+COPY README.ipynb /dltk/
 
 # Copy jupyter config
 COPY config/jupyter_notebook_conversion.py /dltk/.jupyter/jupyter_notebook_conversion.py

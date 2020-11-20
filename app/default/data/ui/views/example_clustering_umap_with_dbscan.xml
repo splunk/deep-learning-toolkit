@@ -16,7 +16,7 @@
   <row>
     <panel>
       <html>
-      <img src="/static/app/mltk-container/icons/cluster.png" style="width:5%; height:5%; float:right;"/>
+      <img src="/static/app/$env:app$/icons/cluster.png" style="width:5%; height:5%; float:right;"/>
         <h1>Example for UMAP based Clustering</h1>
         <p>This example shows the dimensionality reduction technique <a href="https://umap-learn.readthedocs.io/en/latest/index.html" target="_blank">UMAP (Uniform Manifold Approximation and Projection for Dimension Reduction)</a> in combination with DBSCAN for distance based clustering.</p>
       </html>

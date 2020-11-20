@@ -1584,7 +1584,7 @@ require([
                         var view = dashboards.find(function(m){ return m.entry.get('name') === id; });
                         if(!view) {
                             if(HIDE_MISSING_VIEWS) { return; }
-                            $example.addClass('missing').attr("title", "Example view is not available!");
+                            $example.addClass('missing').attr("title", "This example was not yet migrated from DLTK 3.x");
                         }
                         var label = exampleInfo.get('title') || (view && view.entry.content.get('label') || id);
                         var $exampleTitle = $('<h3></h3>').text(label);

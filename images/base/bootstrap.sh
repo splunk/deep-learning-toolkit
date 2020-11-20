@@ -6,7 +6,10 @@ export FLASK_DEBUG=0
 
 umask 002
 cp -R -n /dltk/app /srv
-cp -R -n /dltk/notebooks /srv
+cp -R -n /dltk/data /srv
+cp -R -n /dltk/examples /srv
+cp /dltk/README.ipynb /srv
+
 if [ -w /etc/passwd ]; then
   echo "dltk:x:$(id -u):0:dltk user:/dltk:/sbin/nologin" >> /etc/passwd
 fi

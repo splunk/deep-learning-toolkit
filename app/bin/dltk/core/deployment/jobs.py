@@ -77,9 +77,9 @@ def run(splunk, algorithm_name, environment_name, delete=False):
             deployment.logger.info("deployment status: %s" % (e.status))
         deployment.status = e.status
         deployment.status_message = e.message
-        deployment.logger.error("deployment job (delete=%s) completed with status: %s" % (delete, deployment.status))
+        deployment.logger.info("deployment job (delete=%s) completed with status: %s" % (delete, deployment.status))
     except jobs.Stop:
-        deployment.logger.error("deployment job (delete=%s) stopped" % delete)
+        deployment.logger.info("deployment job (delete=%s) stopped" % delete)
         raise
     except errors.UserFriendlyError as e:
         #err_msg = traceback.format_exc()

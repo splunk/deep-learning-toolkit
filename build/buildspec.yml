@@ -19,17 +19,13 @@ phases:
       # Render Spark Operator charts
       - SPARK_OPERATOR=/spark_operator
       - mkdir $SPARK_OPERATOR
-      - helm repo add incubator http://storage.googleapis.com/kubernetes-charts-incubator
-      - helm template sparkoperator incubator/sparkoperator --set sparkJobNamespace=default --set serviceAccounts.sparkoperator.name=default --set serviceAccounts.spark.name=default --set operatorVersion=v1beta2-1.2.0-3.0.0 --set enableWebhook=true --output-dir=$SPARK_OPERATOR
-      - rm $SPARK_OPERATOR/sparkoperator/templates/webhook-cleanup-job.yaml
-      - rm $SPARK_OPERATOR/sparkoperator/templates/crd-cleanup-job.yaml
-      #- ls $SPARK_OPERATOR/sparkoperator/templates/
+      - helm template sparkoperator https://github.com/GoogleCloudPlatform/spark-on-k8s-operator/releases/download/spark-operator-1.0.0/spark-operator-1.0.0.tgz --set sparkJobNamespace=default --set serviceAccounts.sparkoperator.name=default --set serviceAccounts.spark.name=default --set operatorVersion=v1beta2-1.2.0-3.0.0 --set enableWebhook=true --output-dir=$SPARK_OPERATOR
       # Render HAProxy
       # https://github.com/helm/charts/tree/master/incubator/haproxy-ingress#configuration
       # https://github.com/jcmoraisjr/haproxy-ingress/blob/v0.6/README.md#rewrite-target
       - HAPROXY=/haproxy
       - mkdir $HAPROXY
-      - helm template haproxy incubator/haproxy-ingress --namespace default --set-string "controller.config.ssl-redirect=false" --output-dir=$HAPROXY
+      - helm template haproxy https://github.com/haproxy-ingress/charts/releases/download/0.11.0/haproxy-ingress-0.11.0.tgz --namespace default --set-string "controller.config.ssl-redirect=false" --output-dir=$HAPROXY
       # Install Packaging Toolkit
       - cd /tmp
       - pip install semantic_version

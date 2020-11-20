@@ -102,7 +102,7 @@ phases:
         k3d image import $DLTK_BASE_RUNTIME_IMAGE -c dltkbuild
         k3d image import $DLTK_SPARK_RUNTIME_DRIVER_IMAGE $DLTK_SPARK_RUNTIME_EXECUTOR_IMAGE $DLTK_SPARK_RUNTIME_DRIVER_PROXY_IMAGE $DLTK_SPARK_RUNTIME_EDITOR_IMAGE $DLTK_SPARK_RUNTIME_OUTBOUND_RELAY_IMAGE $DLTK_SPARK_RUNTIME_INBOUND_RELAY_IMAGE -c dltkbuild
       # Wait for Spark Operator
-      - echo "waiting for Spark operator ..."; docker run --network=container:$K3D_ID --rm -e "KUBECONFIG=/tmp/.kube/config" kubectl wait --for=condition=available --timeout=5m deployment/sparkoperator
+      - echo "waiting for Spark operator ..."; docker run --network=container:$K3D_ID --rm -e "KUBECONFIG=/tmp/.kube/config" kubectl wait --for=condition=available --timeout=5m deployment/sparkoperator-spark-operator
       # Wait for HDFS
       - echo "waiting for hdfs datanode ..."; while [ "$(docker run --network=container:$K3D_ID --rm -e "KUBECONFIG=/tmp/.kube/config" kubectl get ds my-hdfs-datanode -o 'jsonpath={..status.numberReady}')" != "1" ]; do sleep 1; done
       - echo "waiting for hdfs namenode ..."; while [ "$(docker run --network=container:$K3D_ID --rm -e "KUBECONFIG=/tmp/.kube/config" kubectl get statefulset my-hdfs-namenode | grep 1/1 | wc -l)" != "1" ]; do sleep 1; done

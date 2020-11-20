@@ -5,10 +5,10 @@ import http
 import json
 import io
 
-__all__ = ["BaseExecution"]
+__all__ = ["H2oExecution"]
 
 
-class BaseExecution(KubernetesExecution):
+class H2oExecution(KubernetesExecution):
 
     def handle_summary(self, url):
         request = urllib.request.Request(

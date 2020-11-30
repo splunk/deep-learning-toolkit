@@ -15,4 +15,4 @@ if [ -w /etc/passwd ]; then
 fi
 export HOME=/dltk
 
-jupyter lab --port=8888 --ip=0.0.0.0 --no-browser --LabApp.base_url=$JUPYTER_BASE_URL_PATH & tensorboard --bind_all --logdir /srv/notebooks/logs/ & flask run -h 0.0.0.0
+jupyter lab --port=8888 --ip=0.0.0.0 --no-browser --LabApp.base_url=$JUPYTER_BASE_URL_PATH & tensorboard --bind_all --logdir /srv/notebooks/logs/ & mlflow ui -p 6000 -h 0.0.0.0 & flask run -h 0.0.0.0

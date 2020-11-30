@@ -23,7 +23,12 @@ docker build --rm -f "./editor/thin.Dockerfile" -t $DLTK_SPARK_RUNTIME_EDITOR_IM
 docker build --rm -f "./inbound-relay/Dockerfile" -t $DLTK_SPARK_RUNTIME_INBOUND_RELAY_IMAGE .
 docker build --rm -f "./outbound-relay/Dockerfile" -t $DLTK_SPARK_RUNTIME_OUTBOUND_RELAY_IMAGE .
 
-# build base-runtime images
+# build base-runtime image
 cd $IMAGES_DIR/base
 ./build.sh golden-image-gpu-4 phdrieger/ 4.0.0
 docker tag phdrieger/mltk-container-golden-image-gpu-4:4.0.0 $DLTK_BASE_RUNTIME_IMAGE
+
+# build h2o-runtime image
+cd $IMAGES_DIR/h2o
+./build.sh 
+docker tag dltk4splunk/h2o-runtime:devel $DLTK_H2O_RUNTIME_IMAGE

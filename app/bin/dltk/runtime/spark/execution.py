@@ -285,7 +285,8 @@ class SparkExecution(KubernetesExecution):
             raise Exception("unsupported input_hdfs_data_path: %s" % self.input_hdfs_data_path)
 
     def signal_start(self):
-        self.logger.warning("sending start signal to Spark ...")
+        request_url = urllib.parse.urljoin(self.driver_url, "start")
+        self.logger.warning("sending start signal to Spark (%s) ..." % request_url)
         with opentracing.tracer.start_active_span("wait-for-spark-driver"):
             errors = 0
             # https://github.com/opentracing/specification/blob/master/semantic_conventions.md
@@ -302,11 +303,7 @@ class SparkExecution(KubernetesExecution):
                         carrier=headers
                     )
                     try:
-                        request = urllib.request.Request(
-                            urllib.parse.urljoin(self.driver_url, "start"),
-                            method="PUT",
-                            headers=headers
-                        )
+                        request = urllib.request.Request(request_url, method="PUT", headers=headers)
                         urllib.request.urlopen(request)
                         break
                     except urllib.error.HTTPError as e:

@@ -52,6 +52,8 @@ RUN pip install pyro-ppl
 RUN jupyter lab build
 RUN jupyter lab clean
 
+RUN apt-get update --fix-missing && apt-get -y install graphviz
+
 RUN mkdir /dltk
 # Define working directory
 WORKDIR /srv

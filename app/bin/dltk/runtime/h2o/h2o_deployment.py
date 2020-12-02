@@ -7,10 +7,10 @@ from kubernetes import client as kubernetes_client
 from dltk.core.deployment import status as deployment_status, UserFriendlyError
 
 
-__all__ = ["BaseDeployment"]
+__all__ = ["H2oDeployment"]
 
 
-class BaseDeployment(KubernetesDeployment):
+class H2oDeployment(KubernetesDeployment):
 
     @property
     def store_models_in_volume(self):
@@ -49,17 +49,13 @@ class BaseDeployment(KubernetesDeployment):
                     service_type="NodePort"
                 )
                 self.wait_for_service(service)
-                api_node_port = self.get_service_nodeport(service, "api")
                 jupyter_node_port = self.get_service_nodeport(service, "jupyter")
-                tensorboard_node_port = self.get_service_nodeport(service, "tensorboard")
-                mlflow_node_port = self.get_service_nodeport(service, "mlflow")
+                api_node_port = self.get_service_nodeport(service, "api")
                 node_port_url = self.environment.node_port_url
                 self.logger.warning("%s" % node_port_url)
                 o = urlparse(node_port_url)
-                self.api_url = "%s://%s:%s" % (o.scheme, o.hostname, api_node_port)
+                api_url = "%s://%s:%s" % (o.scheme, o.hostname, api_node_port)
                 self.editor_url = "%s://%s:%s" % (o.scheme, o.hostname, jupyter_node_port)
-                self.tensorboard_url = "%s://%s:%s" % (o.scheme, o.hostname, tensorboard_node_port)
-                self.mlflow_url = "%s://%s:%s" % (o.scheme, o.hostname, mlflow_node_port)
 
             elif self.environment.ingress_mode == "ingress":
 
@@ -76,26 +72,6 @@ class BaseDeployment(KubernetesDeployment):
                 )
                 self.editor_url = self.get_ingress_url("editor")
 
-                # create ingress for Tensorboard
-                ingress_mlflow = self.deploy_ingress(
-                    service,
-                    port=6006,
-                    title="tensorboard",
-                    ingress_labels={"component": "tensorboard"},
-                    rewrite_path=False,
-                )
-                self.tensorboard_url = self.get_ingress_url("tensorboard")
-
-                # create ingress for MLflow UI
-                ingress_mlflow = self.deploy_ingress(
-                    service,
-                    port=6000,
-                    title="mlflow",
-                    ingress_labels={"component": "mlflow"},
-                    rewrite_path=False,
-                )
-                self.mlflow_url = self.get_ingress_url("mlflow")
-
                 # create ingress for flask api endpoint
                 ingress_api = self.deploy_ingress(
                     service,
@@ -104,18 +80,16 @@ class BaseDeployment(KubernetesDeployment):
                     ingress_labels={"component": "api"},
                     rewrite_path=True,
                 )
-                self.api_url = self.get_ingress_url("api")
+                api_url = self.get_ingress_url("api")
 
             else:
                 raise UserFriendlyError("Unsupported ingress mode %s. Only node-port is allowed." % self.environment.ingress_mode)
 
             self.runtime_status = {
-                "api_url": self.api_url,
-                "tensorboard_url": self.tensorboard_url,
-                "mlflow_url": self.mlflow_url,
-                "editor_url": self.editor_url,
+                "api_url": api_url,
             }
-            self.sync_source_code(self.api_url)
+
+            # self.sync_source_code(api_url)
 
     def deploy_base_volume_claim(self):
         return self.deploy_volume_claim(
@@ -137,19 +111,7 @@ class BaseDeployment(KubernetesDeployment):
                     name="jupyter",
                     port=80,
                     protocol="TCP",
-                    target_port=8888,
-                ),
-                kubernetes_client.V1ServicePort(
-                    name="mlflow",
-                    port=6000,
-                    protocol="TCP",
-                    target_port=6000,
-                ),
-                kubernetes_client.V1ServicePort(
-                    name="tensorboard",
-                    port=6006,
-                    protocol="TCP",
-                    target_port=6006,
+                    target_port=54321,
                 ),
             ],
             service_type=service_type
@@ -171,7 +133,7 @@ class BaseDeployment(KubernetesDeployment):
             ]
             volume_mounts = [
                 kubernetes_client.V1VolumeMount(
-                    mount_path="/srv",
+                    mount_path="/root",
                     name="data",
                 ),
             ]
@@ -193,11 +155,6 @@ class BaseDeployment(KubernetesDeployment):
                 kubernetes_client.V1ContainerPort(
                     container_port=8888,
                     name="jupyter",
-                    protocol="TCP"
-                ),
-                kubernetes_client.V1ContainerPort(
-                    container_port=6000,
-                    name="mlflow",
                     protocol="TCP"
                 ),
                 kubernetes_client.V1ContainerPort(

@@ -79,3 +79,9 @@ user_token = <string>
 
 cluster_url = <string>
 * Defaults what set set 'cluster_url' in the 'kubernetes' connector.
+
+user_password = <string>
+* Defaults what set set 'user_password' in the 'kubernetes' connector.
+
+user_name = <string>
+* Defaults what set set 'user_name' in the 'kubernetes' connector.

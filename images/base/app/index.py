@@ -26,7 +26,7 @@ app = Flask(__name__)
 # GLOBAL variables
 # -------------------------------------------------------------------------------
 app.Model = {}
-app.NotebookDataPath = "/srv/notebooks/data/"
+app.NotebookDataPath = "/srv/data/"
 
 # -------------------------------------------------------------------------------
 # HELPER functions
@@ -271,7 +271,7 @@ def set_apply():
 def get_summary():
     return_object = {
         "app": "Deep Learning Toolkit for Splunk",
-        "version": "3.2.0",
+        "version": "4.0.0",
         "model": "no model exists"
     }
     if "model" in app.Model:
@@ -289,8 +289,8 @@ def get_info():
     return get_summary()
 
 
-code_module_path = "/srv/notebooks/algo.ipynb"
-code_version_path = "/srv/notebooks/algo.ipynb.version"
+code_module_path = "/srv/notebook.ipynb"
+code_version_path = "/srv/notebook.ipynb.version"
 
 
 @app.route('/notebook', methods=['GET', 'PUT'])

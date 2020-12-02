@@ -4,8 +4,9 @@ import sys
 bin_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "app", "bin"))
 if bin_path not in sys.path:
     sys.path.insert(0, bin_path)
-
-#raise Exception("list: %s" % os.listdir(bin_path))
+lib_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "app", "lib"))
+if lib_path not in sys.path:
+    sys.path.insert(0, lib_path)
 
 import unittest
 import inspect

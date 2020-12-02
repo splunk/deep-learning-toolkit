@@ -4,7 +4,7 @@ env:
   variables:
     DOCKER_ACCOUNT: "dltk4splunk"
     #DOCKER_PASSWORD: "..."
-    #CODEBUILD_SOURCE_VERSION: "123"
+    #CODEBUILD_BUILD_NUMBER: "123"
 
 phases:
   install:
@@ -12,35 +12,54 @@ phases:
       - BUILD_DIR=$CODEBUILD_SRC_DIR/build
       - IMAGES_DIR=$CODEBUILD_SRC_DIR/images
       - APP_DIR=$CODEBUILD_SRC_DIR/app
+      ######################################################
       # Install K3D
+      - TAG="v3.1.2" # later version fails when spark operator tries to install the webhook (tls issues). Expecting to get a fix with a later version. Chart version 0.8.4 still has the issue.
       - wget -q -O - https://raw.githubusercontent.com/rancher/k3d/main/install.sh | bash
+      ######################################################
       # Install HELM
       - curl https://raw.githubusercontent.com/helm/helm/master/scripts/get-helm-3 | bash
+      ######################################################
       # Render Spark Operator charts
-      - SPARK_OPERATOR=/spark_operator
-      - mkdir $SPARK_OPERATOR
-      - helm repo add incubator http://storage.googleapis.com/kubernetes-charts-incubator
-      - helm template sparkoperator incubator/sparkoperator --set sparkJobNamespace=default --set serviceAccounts.sparkoperator.name=default --set serviceAccounts.spark.name=default --set operatorVersion=v1beta2-1.2.0-3.0.0 --set enableWebhook=true --output-dir=$SPARK_OPERATOR
-      - rm $SPARK_OPERATOR/sparkoperator/templates/webhook-cleanup-job.yaml
-      - rm $SPARK_OPERATOR/sparkoperator/templates/crd-cleanup-job.yaml
-      #- ls $SPARK_OPERATOR/sparkoperator/templates/
+      - SPARK_OPERATOR_MANIFESTS=/spark_operator
+      - mkdir $SPARK_OPERATOR_MANIFESTS
+      - helm repo add incubator https://charts.helm.sh/incubator --force-update
+      - helm template sparkoperator incubator/sparkoperator --version "0.8.4" --set sparkJobNamespace=default --set serviceAccounts.sparkoperator.name=default --set serviceAccounts.spark.name=default --set enableWebhook=true --output-dir=$SPARK_OPERATOR_MANIFESTS
+      - rm $SPARK_OPERATOR_MANIFESTS/sparkoperator/templates/webhook-cleanup-job.yaml
+      - rm $SPARK_OPERATOR_MANIFESTS/sparkoperator/templates/crd-cleanup-job.yaml
+      # maybe useful for 1.0 release
+      #- helm template sparkoperator incubator/sparkoperator --set sparkJobNamespace=default --set serviceAccounts.sparkoperator.name=default --set serviceAccounts.spark.name=default --set webhook.enable=true --output-dir=$SPARK_OPERATOR_MANIFESTS
+      ######################################################
       # Render HAProxy
       # https://github.com/helm/charts/tree/master/incubator/haproxy-ingress#configuration
       # https://github.com/jcmoraisjr/haproxy-ingress/blob/v0.6/README.md#rewrite-target
       - HAPROXY=/haproxy
       - mkdir $HAPROXY
-      - helm template haproxy incubator/haproxy-ingress --namespace default --set-string "controller.config.ssl-redirect=false" --output-dir=$HAPROXY
+      # todo: use fix version instead of latest
+      - helm repo add haproxy-ingress https://haproxy-ingress.github.io/charts
+      - helm template haproxy haproxy-ingress/haproxy-ingress --set-string "controller.config.ssl-redirect=false" --set-string "controller.service.type=ClusterIP" --set "controller.service.externalTrafficPolicy=null" --set "controller.logs.enabled=true" --set "controller.config.syslog-endpoint=127.0.0.1:514" --output-dir=$HAPROXY
+      #- helm template haproxy https://github.com/haproxy-ingress/charts/releases/download/0.11.0/haproxy-ingress-0.11.0.tgz --namespace default --set-string "controller.config.ssl-redirect=false" --output-dir=$HAPROXY
+      ######################################################
       # Install Packaging Toolkit
       - cd /tmp
       - pip install semantic_version
       - wget https://download.splunk.com/misc/packaging-toolkit/splunk-packaging-toolkit-1.0.1.tar.gz
       - pip install splunk-packaging-toolkit-1.0.1.tar.gz
+      ######################################################
       # Install AppInspect
       - cd /tmp
       - wget https://download.splunk.com/misc/appinspect/splunk-appinspect-latest.tar.gz
       - pip install splunk-appinspect-latest.tar.gz
   build:
     commands:
+      # login to docker hub
+      - |
+        set -e
+        if [ -n "$DOCKER_PASSWORD" ]; then
+          echo $DOCKER_PASSWORD | docker login --username $DOCKER_ACCOUNT --password-stdin
+        else
+          echo 'Not logging is, because no Docker password provided'
+        fi
       # build (package and inspect) Splunk app
       - DLTK_PACKAGE="/tmp/dltk.tar.gz"
       - $BUILD_DIR/build_app.bash $DLTK_PACKAGE
@@ -56,15 +75,6 @@ phases:
       - k3d kubeconfig get dltkbuild >> /tmp/$KUBECONFIG_PATH
       - printf '%s\n\n' "$(tail -n +2 /tmp/$KUBECONFIG_PATH)" >> $KUBECONFIG_PATH
       - sed -i 's/\(server:.*\):.\+/\1:6443/g' $KUBECONFIG_PATH
-      # Build Helm
-      - mkdir /helm
-      - echo "FROM alpine/helm\n" > /helm/Dockerfile
-      - echo "RUN mkdir /tmp/.kube" >> /helm/Dockerfile
-      - echo "RUN echo $'\\" >> /helm/Dockerfile
-      - cat $KUBECONFIG_PATH | awk -v ORS='\\n\\\n' 1 >> /helm/Dockerfile
-      - echo "' > /tmp/.kube/config\n" >> /helm/Dockerfile
-      - docker build -t helm /helm/.
-      - docker run --network=container:$K3D_ID --rm --name helm -e "KUBECONFIG=/tmp/.kube/config" helm version
       # Build Kubectl
       - mkdir /kubectl
       - echo "FROM bitnami/kubectl\n" > /kubectl/Dockerfile
@@ -81,7 +91,7 @@ phases:
       # Start HAProxy
       - find $HAPROXY -name '*.yaml' -type f | xargs -I % sh -c 'cat %; printf "\n---\n"' | docker run --network=container:$K3D_ID --rm -e "KUBECONFIG=/tmp/.kube/config" -i kubectl apply -f -
       # Start Spark Operator
-      - find $SPARK_OPERATOR -name '*.yaml' -type f | xargs -I % sh -c 'cat %; printf "\n---\n"' | docker run --network=container:$K3D_ID --rm -e "KUBECONFIG=/tmp/.kube/config" -i kubectl apply -f -
+      - find $SPARK_OPERATOR_MANIFESTS -name '*.yaml' -type f | xargs -I % sh -c 'cat %; printf "\n---\n"' | docker run --network=container:$K3D_ID --rm -e "KUBECONFIG=/tmp/.kube/config" -i kubectl apply -f -
       # Start Ingress Controller
       - cat $BUILD_DIR/nginx.yaml | docker run --network=container:$K3D_ID --rm -e "KUBECONFIG=/tmp/.kube/config" -i kubectl apply -f -
       # Start HDFS
@@ -115,7 +125,7 @@ phases:
       - docker run --network=container:$K3D_ID --rm -e KUBECONFIG=/tmp/.kube/config kubectl exec $TARGET_SPLUNK_POD_NAME -- /opt/splunk/bin/splunk restart
       # Run tests
       - cd $CODEBUILD_SRC_DIR
-      - tar -czvf /tmp/source.tar.gz *
+      - tar -czf /tmp/source.tar.gz *
       - docker run --network=container:$K3D_ID --rm -e KUBECONFIG=/tmp/.kube/config kubectl exec $TARGET_SPLUNK_POD_NAME -- mkdir /tmp/source
       - cat "/tmp/source.tar.gz" | docker run --network=container:$K3D_ID -i --rm -e KUBECONFIG=/tmp/.kube/config kubectl exec -i $TARGET_SPLUNK_POD_NAME -- /bin/bash -c 'cat > /tmp/source.tar.gz'
       - docker run --network=container:$K3D_ID --rm -e KUBECONFIG=/tmp/.kube/config kubectl exec $TARGET_SPLUNK_POD_NAME -- tar zxf /tmp/source.tar.gz -C /tmp/source
@@ -127,10 +137,7 @@ phases:
       - echo "$DLTK_SPARK_RUNTIME_EDITOR_IMAGE" | docker run --network=container:$K3D_ID -i --rm -e KUBECONFIG=/tmp/.kube/config kubectl exec -i $TARGET_SPLUNK_POD_NAME -- /bin/bash -c 'cat > /tmp/DLTK_SPARK_RUNTIME_EDITOR_IMAGE'
       - echo "$DLTK_SPARK_RUNTIME_INBOUND_RELAY_IMAGE" | docker run --network=container:$K3D_ID -i --rm -e KUBECONFIG=/tmp/.kube/config kubectl exec -i $TARGET_SPLUNK_POD_NAME -- /bin/bash -c 'cat > /tmp/DLTK_SPARK_RUNTIME_INBOUND_RELAY_IMAGE'
       - echo "$DLTK_SPARK_RUNTIME_OUTBOUND_RELAY_IMAGE" | docker run --network=container:$K3D_ID -i --rm -e KUBECONFIG=/tmp/.kube/config kubectl exec -i $TARGET_SPLUNK_POD_NAME -- /bin/bash -c 'cat > /tmp/DLTK_SPARK_RUNTIME_OUTBOUND_RELAY_IMAGE'
-      - docker run --network=container:$K3D_ID --rm -e KUBECONFIG=/tmp/.kube/config kubectl exec $TARGET_SPLUNK_POD_NAME -- /bin/bash -c 'SPLUNK_PASSWORD="$(cat /tmp/SPLUNK_ADMIN_PASSWORD)" DLTK_BASE_RUNTIME_IMAGE="$(cat /tmp/DLTK_BASE_RUNTIME_IMAGE)" DLTK_SPARK_RUNTIME_DRIVER_IMAGE="$(cat /tmp/DLTK_SPARK_RUNTIME_DRIVER_IMAGE)" DLTK_SPARK_RUNTIME_EXECUTOR_IMAGE="$(cat /tmp/DLTK_SPARK_RUNTIME_EXECUTOR_IMAGE)" DLTK_SPARK_RUNTIME_DRIVER_PROXY_IMAGE="$(cat /tmp/DLTK_SPARK_RUNTIME_DRIVER_PROXY_IMAGE)" DLTK_SPARK_RUNTIME_EDITOR_IMAGE="$(cat /tmp/DLTK_SPARK_RUNTIME_EDITOR_IMAGE)" DLTK_SPARK_RUNTIME_INBOUND_RELAY_IMAGE="$(cat /tmp/DLTK_SPARK_RUNTIME_INBOUND_RELAY_IMAGE)" DLTK_SPARK_RUNTIME_OUTBOUND_RELAY_IMAGE="$(cat /tmp/DLTK_SPARK_RUNTIME_OUTBOUND_RELAY_IMAGE)" DLTK_INGRESS_URL="http://haproxy-haproxy-ingress-controller/" DLTK_INGRESS_CLASS="haproxy" DLTK_HDFS_HTTP_URL="http://my-hdfs-namenode:50070" DLTK_HDFS_URL="hdfs://my-hdfs-namenode" DLTK_APP_NAME="dltk" SKIP_TEST_UNLESS_=ListEnvironmentTestCase /opt/splunk/bin/splunk cmd python3 /tmp/source/test/test.py'
-  post_build:
-    commands:
-      - k3d cluster delete dltkbuild
+      - docker run --network=container:$K3D_ID --rm -e KUBECONFIG=/tmp/.kube/config kubectl exec $TARGET_SPLUNK_POD_NAME -- /bin/bash -c 'SPLUNK_PASSWORD="$(cat /tmp/SPLUNK_ADMIN_PASSWORD)" DLTK_BASE_RUNTIME_IMAGE="$(cat /tmp/DLTK_BASE_RUNTIME_IMAGE)" DLTK_SPARK_RUNTIME_DRIVER_IMAGE="$(cat /tmp/DLTK_SPARK_RUNTIME_DRIVER_IMAGE)" DLTK_SPARK_RUNTIME_EXECUTOR_IMAGE="$(cat /tmp/DLTK_SPARK_RUNTIME_EXECUTOR_IMAGE)" DLTK_SPARK_RUNTIME_DRIVER_PROXY_IMAGE="$(cat /tmp/DLTK_SPARK_RUNTIME_DRIVER_PROXY_IMAGE)" DLTK_SPARK_RUNTIME_EDITOR_IMAGE="$(cat /tmp/DLTK_SPARK_RUNTIME_EDITOR_IMAGE)" DLTK_SPARK_RUNTIME_INBOUND_RELAY_IMAGE="$(cat /tmp/DLTK_SPARK_RUNTIME_INBOUND_RELAY_IMAGE)" DLTK_SPARK_RUNTIME_OUTBOUND_RELAY_IMAGE="$(cat /tmp/DLTK_SPARK_RUNTIME_OUTBOUND_RELAY_IMAGE)" DLTK_INGRESS_URL="http://haproxy-haproxy-ingress/" DLTK_INGRESS_CLASS="haproxy" DLTK_HDFS_HTTP_URL="http://my-hdfs-namenode:50070" DLTK_HDFS_URL="hdfs://my-hdfs-namenode" DLTK_APP_NAME="dltk" SKIP_TEST_UNLESS_=ListEnvironmentTestCase /opt/splunk/bin/splunk cmd python3 /tmp/source/test/test.py'
       # Push images
       - |
         set -e
@@ -147,15 +154,16 @@ phases:
         else
           echo 'Not devel pushing'
         fi
-        echo CODEBUILD_SOURCE_VERSION=$CODEBUILD_SOURCE_VERSION
-        if [ -n "$DOCKER_PASSWORD" ] && [ -n "$CODEBUILD_SOURCE_VERSION" ]; then
-          DLTK_SPARK_RUNTIME_DRIVER_IMAGE_VERSIONED=$DLTK_SPARK_RUNTIME_DRIVER_IMAGE_BASE:$CODEBUILD_SOURCE_VERSION
-          DLTK_SPARK_RUNTIME_EXECUTOR_IMAGE_VERSIONED=$DLTK_SPARK_RUNTIME_EXECUTOR_IMAGE_BASE:$CODEBUILD_SOURCE_VERSION
-          DLTK_SPARK_RUNTIME_DRIVER_PROXY_IMAGE_VERSIONED=$DLTK_SPARK_RUNTIME_DRIVER_PROXY_IMAGE_BASE:$CODEBUILD_SOURCE_VERSION
-          DLTK_SPARK_RUNTIME_EDITOR_IMAGE_VERSIONED=$DLTK_SPARK_RUNTIME_EDITOR_IMAGE_BASE:$CODEBUILD_SOURCE_VERSION
-          DLTK_SPARK_RUNTIME_INBOUND_RELAY_IMAGE_VERSIONED=$DLTK_SPARK_RUNTIME_INBOUND_RELAY_IMAGE_BASE:$CODEBUILD_SOURCE_VERSION
-          DLTK_SPARK_RUNTIME_OUTBOUND_RELAY_IMAGE_VERSIONED=$DLTK_SPARK_RUNTIME_OUTBOUND_RELAY_IMAGE_BASE:$CODEBUILD_SOURCE_VERSION
-          DLTK_BASE_RUNTIME_IMAGE_VERSIONED=$DLTK_BASE_RUNTIME_IMAGE_BASE:$CODEBUILD_SOURCE_VERSION
+        echo CODEBUILD_BUILD_NUMBER=$CODEBUILD_BUILD_NUMBER
+        if [ -n "$DOCKER_PASSWORD" ] && [ -n "$CODEBUILD_BUILD_NUMBER" ]; then
+          DLTK_SPARK_RUNTIME_DRIVER_IMAGE_VERSIONED=$DLTK_SPARK_RUNTIME_DRIVER_IMAGE_BASE:$CODEBUILD_BUILD_NUMBER
+          DLTK_SPARK_RUNTIME_EXECUTOR_IMAGE_VERSIONED=$DLTK_SPARK_RUNTIME_EXECUTOR_IMAGE_BASE:$CODEBUILD_BUILD_NUMBER
+          DLTK_SPARK_RUNTIME_DRIVER_PROXY_IMAGE_VERSIONED=$DLTK_SPARK_RUNTIME_DRIVER_PROXY_IMAGE_BASE:$CODEBUILD_BUILD_NUMBER
+          DLTK_SPARK_RUNTIME_EDITOR_IMAGE_VERSIONED=$DLTK_SPARK_RUNTIME_EDITOR_IMAGE_BASE:$CODEBUILD_BUILD_NUMBER
+          DLTK_SPARK_RUNTIME_INBOUND_RELAY_IMAGE_VERSIONED=$DLTK_SPARK_RUNTIME_INBOUND_RELAY_IMAGE_BASE:$CODEBUILD_BUILD_NUMBER
+          DLTK_SPARK_RUNTIME_OUTBOUND_RELAY_IMAGE_VERSIONED=$DLTK_SPARK_RUNTIME_OUTBOUND_RELAY_IMAGE_BASE:$CODEBUILD_BUILD_NUMBER
+          DLTK_BASE_RUNTIME_IMAGE_VERSIONED=$DLTK_BASE_RUNTIME_IMAGE_BASE:$CODEBUILD_BUILD_NUMBER
+          DLTK_H2O_RUNTIME_IMAGE_VERSIONED=$DLTK_H2O_RUNTIME_IMAGE_BASE:$CODEBUILD_BUILD_NUMBER
           docker tag $DLTK_SPARK_RUNTIME_DRIVER_IMAGE $DLTK_SPARK_RUNTIME_DRIVER_IMAGE_VERSIONED
           docker tag $DLTK_SPARK_RUNTIME_EXECUTOR_IMAGE $DLTK_SPARK_RUNTIME_EXECUTOR_IMAGE_VERSIONED
           docker tag $DLTK_SPARK_RUNTIME_DRIVER_PROXY_IMAGE $DLTK_SPARK_RUNTIME_DRIVER_PROXY_IMAGE_VERSIONED
@@ -163,6 +171,7 @@ phases:
           docker tag $DLTK_SPARK_RUNTIME_DRIVER_IMAGE $DLTK_SPARK_RUNTIME_INBOUND_RELAY_IMAGE_VERSIONED
           docker tag $DLTK_SPARK_RUNTIME_OUTBOUND_RELAY_IMAGE $DLTK_SPARK_RUNTIME_OUTBOUND_RELAY_IMAGE_VERSIONED
           docker tag $DLTK_BASE_RUNTIME_IMAGE $DLTK_BASE_RUNTIME_IMAGE_VERSIONED
+          docker tag $DLTK_H2O_RUNTIME_IMAGE $DLTK_H2O_RUNTIME_IMAGE_VERSIONED
           docker push $DLTK_SPARK_RUNTIME_DRIVER_IMAGE_VERSIONED
           docker push $DLTK_SPARK_RUNTIME_EXECUTOR_IMAGE_VERSIONED
           docker push $DLTK_SPARK_RUNTIME_DRIVER_PROXY_IMAGE_VERSIONED
@@ -170,6 +179,10 @@ phases:
           docker push $DLTK_SPARK_RUNTIME_INBOUND_RELAY_IMAGE_VERSIONED
           docker push $DLTK_SPARK_RUNTIME_OUTBOUND_RELAY_IMAGE_VERSIONED
           docker push $DLTK_BASE_RUNTIME_IMAGE_VERSIONED
+          docker push $DLTK_H2O_RUNTIME_IMAGE_VERSIONED
         else
           echo 'Not source version pushing'
         fi
+  post_build:
+    commands:
+      - k3d cluster delete dltkbuild

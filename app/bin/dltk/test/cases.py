@@ -3,6 +3,7 @@ import sys
 import unittest
 
 from dltk.core.splunk.test_spec_parser import *
+from dltk.connector.kubernetes.test_resources import *
 from dltk.core.runtime.test_runtime_api import *
 from dltk.core.environment.test_environment import *
 from dltk.core.algorithm.test_algorithm_api import *

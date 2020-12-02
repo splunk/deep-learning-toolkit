@@ -57,6 +57,14 @@ class KubernetesEnvironment(Environment):
         return self.get_param("user_token")
 
     @property
+    def user_name(self):
+        return self.get_param("user_name")
+
+    @property
+    def user_password(self):
+        return self.get_param("user_password")
+
+    @property
     def cluster_url(self):
         return self.get_param("cluster_url")
 
@@ -215,9 +223,31 @@ class KubernetesEnvironment(Environment):
             config.verify_ssl = False
 
         elif self.auth_mode == "user-token":
+            # TODO: should cluster_ca be used here too?
             config.host = self.cluster_url
             config.api_key["authorization"] = self.user_token
             config.api_key_prefix["authorization"] = "Bearer"
+            config.verify_ssl = False
+
+        elif self.auth_mode == "user-password":
+            if self.cluster_ca:
+                try:
+                    cluster_ca_data = base64.standard_b64decode(self.cluster_ca)
+                    fp = tempfile.NamedTemporaryFile(
+                        delete=False)   # TODO when to delete?
+                    fp.write(cluster_ca_data)
+                    fp.close()
+                    config.ssl_ca_cert = fp.name
+                except Exception as e:
+                    raise Exception(
+                        "Error applying cluster ca: %s" % (e))
+            config.host = self.cluster_url
+
+            import urllib3
+            config.api_key["authorization"] = urllib3.util.make_headers(
+                basic_auth=self.user_name + ':' + self.user_password
+            ).get('authorization')
+
             config.verify_ssl = False
 
         elif self.auth_mode == "in-cluster":

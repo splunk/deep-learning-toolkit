@@ -42,6 +42,13 @@ RUN python -m spacy download en_core_web_sm
 
 RUN pip install pyarrow>=0.15 vaex>=3.0.0
 
+RUN pip install causalnex
+RUN pip install pm4py
+RUN pip install mlflow
+RUN pip install pyro-ppl 
+#RUN pip install git+https://github.com/online-ml/river --upgrade
+#RUN pip install river
+
 RUN jupyter lab build
 RUN jupyter lab clean
 
@@ -52,7 +59,9 @@ WORKDIR /srv
 # Copy bootstrap entry point script
 COPY bootstrap.sh /dltk/
 COPY app /dltk/app
-COPY notebooks /dltk/notebooks
+COPY data /dltk/data
+COPY examples /dltk/examples
+COPY README.ipynb /dltk/
 
 # Copy jupyter config
 COPY config/jupyter_notebook_conversion.py /dltk/.jupyter/jupyter_notebook_conversion.py
@@ -68,8 +77,8 @@ RUN chgrp -R 0 /srv && \
 RUN chmod g+w /etc/passwd
 USER 1001
 
-# Expose container port 5000 (MLTK Container Service) and 8888 (Notebook) and 6006 (Tensorboard)
-EXPOSE 5000 8888 6006
+# Expose container port 5000 (MLTK Container Service) and 8888 (Notebook) and 6006 (Tensorboard) and 6000 (MLflow)
+EXPOSE 5000 8888 6006 6000
 
 # Define bootstrap as entry point to start container
 ENTRYPOINT ["/dltk/bootstrap.sh"]

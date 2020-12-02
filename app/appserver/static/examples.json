@@ -1,0 +1,221 @@
+[
+{
+    "id": "example_classifier_tensorflow_binary_neural_network",
+    "title": "Neural Network Classifier",
+    "short-description": "This example shows how to use a binary neural network classifier build on keras and TensorFlow™",
+    "description-icon": "classifier.png",
+    "version-tag" : "TensorFlow™",
+    "category": "Classifier"
+}
+,
+{
+    "id": "example_classifier_pytorch_logistic_regression_classifier",
+    "title": "Logistic Regression",
+    "short-description": "This example shows a simple logistic regression using PyTorch",
+    "description-icon": "classifier.png",
+    "version-tag" : "PyTorch",
+    "category": "Classifier"
+}
+,
+{
+    "id": "example_classifier_pytorch_multiclass_neural_network_classifier",
+    "title": "Neural Network Classifier",
+    "short-description": "This example shows a simple multi class neural network classifier using PyTorch with GPU",
+    "description-icon": "classifier.png",
+    "version-tag" : "PyTorch",
+    "category": "Classifier"
+}
+,
+{
+    "id": "example_neural_network_classifier_dga",
+    "title": "Neural Network Classifier DGA",
+    "short-description": "This example shows a simple neural network example using PyTorch for building a multiclass classifier applied to the DGA dataset.",
+    "description-icon": "classifier.png",
+    "version-tag" : "PyTorch",
+    "category": "Classifier"
+}
+,
+{
+    "id": "example_spark_gradient_boosting_classifier_dga",
+    "title": "Spark Gradient Boosting Classifier DGA",
+    "short-description": "This example shows a simple gradient boosting model with Spark's MLLib applied to the DGA dataset.",
+    "description-icon": "classifier.png",
+    "version-tag" : "Spark",
+    "category": "Classifier"
+}
+,
+{
+    "id": "example_classifier_xgboost_shap",
+    "title": "Explainable Machine Learning with XGBoost and SHAP",
+    "short-description": "This example shows how to introduce explainability in machine learning models with the help of SHAP.",
+    "description-icon": "classifier.png",
+    "version-tag" : "XGBoost",
+    "category": "Classifier"
+}
+,
+{
+   "id": "example_linear_regression",
+   "title": "Linear Regressor",
+   "short-description": "This example shows the a simple linear regression using the TensorFlow™ estimator class",
+   "description-icon": "regressor.png",
+   "version-tag" : "TensorFlow™",
+   "category": "Regressor"
+}
+,
+{
+    "id": "example_dnn_regressor",
+    "title": "Deep Neural Network Regressor",
+    "short-description": "This example shows a simple regression using the TensorFlow™ Deep Neural Network (DNN) estimator class",
+    "description-icon": "regressor.png",
+    "version-tag" : "TensorFlow™",
+    "category": "Regressor"
+}
+,
+{
+    "id": "example_regressor_xgboost_regressor",
+    "title": "XGBoost Regressor",
+    "short-description": "This example shows a simple regression example with XGBoost",
+    "description-icon": "regressor.png",
+    "version-tag" : "XGBoost",
+    "category": "Regressor"
+}
+
+
+
+,
+{
+    "id": "example_cnn_forecast",
+    "title": "Forecast with Convolutional Neural Networks (CNN)",
+    "short-description": "This example shows an example for forecasting a univariate time series with a convolutional neural network using TensorFlow™",
+    "description-icon": "forecast.png",
+    "version-tag" : "TensorFlow™",
+    "category": "Forecasting"
+}
+,
+{
+    "id": "example_lstm_forecast",
+    "title": "Forecast with Long Short Term Memory (LSTM) Neural Networks",
+    "short-description": "This example shows an example for forecasting a univariate time series with a convolutional neural network using TensorFlow™",
+    "description-icon": "forecast.png",
+    "version-tag" : "TensorFlow™",
+    "category": "Forecasting"
+ }
+,
+{
+    "id": "example_forecast_prophet",
+    "title": "Forecast using Prophet",
+    "short-description": "This example shows how to use the Prophet library for forecasting",
+    "description-icon": "forecast.png",
+    "version-tag" : "Prophet",
+    "category": "Forecasting"
+ }
+,
+{
+   "id": "example_clustering_tensorflow_autoencoder",
+   "title": "Autoencoder",
+   "short-description": "This example shows a basic auto encoder using TensorFlow™ returning hidden layer representation and reconstruction loss measurements.",
+   "description-icon": "cluster.png",
+   "version-tag" : "TensorFlow™",
+   "category": "Clustering"
+}
+,
+{
+   "id": "example_clustering_dask_kmeans",
+   "title": "Distributed KMeans with Dask",
+   "short-description": "This example shows how to distribute algorithm execution with Dask using KMeans.",
+   "description-icon": "cluster.png",
+   "version-tag" : "DASK",
+   "category": "Clustering"
+}
+,
+{
+   "id": "example_clustering_umap_with_dbscan",
+   "title": "Clustering with UMAP and DBSCAN",
+   "short-description": "This example shows the dimensionality reduction technique UMAP in combination with DBSCAN for distance based clustering.",
+   "description-icon": "cluster.png",
+   "version-tag" : "UMAP",
+   "category": "Clustering"
+}
+,
+{
+   "id": "example_nlp_spacy_named_entity_recognition_and_extraction",
+   "title": "Named Entity Recognition and Extraction",
+   "short-description": "This example shows a simple NER (Named Entity Recognition) using spaCy",
+   "description-icon": "nlp.png",
+   "version-tag" : "spaCy",
+   "category": "NLP"
+}
+,
+{
+   "id": "example_nlp_named_entity_recognition_extraction_spacy_ginza",
+   "title": "Named Entity Recognition and Extraction for Japanese",
+   "short-description": "This example shows a simple NER (Named Entity Recognition) for Japanese using spaCy + Ginza",
+   "description-icon": "nlp.png",
+   "version-tag" : "spaCy",
+   "category": "NLP"
+}
+,
+{
+    "id": "example_graphs_networkx_centrality_measurements",
+    "title": "Graph Centrality Algorithms",
+    "short-description": "This example shows how to calculate centrality measures in a graph using NetworkX",
+    "description-icon": "graphs.png",
+    "version-tag" : "NetworkX",
+    "category": "Graphs"
+}
+,
+{
+    "id": "example_graph_rapids_louvain",
+    "title": "Graph Community Detection",
+    "short-description": "This example shows the Louvain Modularity method for community detection running on GPU",
+    "description-icon": "graphs.png",
+    "version-tag" : "Rapids",
+    "category": "Graphs"
+}
+,
+{
+    "id": "example_frequent_itemsets_shopping_analysis",
+    "title": "Frequent Itemset Mining",
+    "short-description": "This example shows how to find frequent itemsets using FP Growth algorithm from Spark MLLib",
+    "description-icon": "mining.png",
+    "version-tag" : "Spark",
+    "category": "Data Mining"
+}
+,
+{
+    "id": "example_collaborative_filtering_recommendations",
+    "title": "Recommendation System",
+    "short-description": "This example shows how to get recommendations using Collaborative Filtering from Spark MLLib",
+    "description-icon": "mining.png",
+    "version-tag" : "Spark",
+    "category": "Data Mining"
+}
+,
+{
+    "id": "example_rapids_umap_dga",
+    "title": "Rapids UMAP on GPU",
+    "short-description": "This example shows how to analyze the DGA dataset with Rapid's UMAP running on GPU",
+    "description-icon": "mining.png",
+    "version-tag" : "Rapids",
+    "category": "Data Mining"
+}
+,
+{
+    "id": "example_basic_correlation_matrix_and_pair_plot",
+    "title": "Correlation Matrix and Pair Plot",
+    "short-description": "This example shows how to do a simple correlation matrix and embed graphic plots from seaborn",
+    "description-icon": "basic.png",
+    "version-tag" : "Pandas",
+    "category": "Basic"
+}
+,
+{
+    "id": "example_spark_pi",
+    "title": "Spark Pi",
+    "short-description": "This shows a very basic hello world example for Spark's Pi Example",
+    "description-icon": "basic.png",
+    "version-tag" : "Spark",
+    "category": "Basic"
+}
+
+]

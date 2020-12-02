@@ -1,14 +1,19 @@
 <nav>
-  <view name="overview" />
-  <view name="activity" default="true" />
+  <view name="overview" default="true" />
+  <view name="activity" />
+  <collection label="Configuration">
+    <view name="environments" />
+    <view name="runtimes" />
+  </collection>
   <view name="algorithms" />
   <view name="models" />
   <collection label="Examples">
+    <view name="examples" />
     <collection label="Classifier">
       <view source="unclassified" match="example_classifier_"/>
     </collection>
     <collection label="Regression">
-      <view source="unclassified" match="example_regression_"/>
+      <view source="unclassified" match="example_regressor_"/>
     </collection>
     <collection label="Forecasting">
       <view source="unclassified" match="example_forecasting_"/>
@@ -29,9 +34,6 @@
       <view source="unclassified" match="example_basic_"/>
     </collection>
   </collection>
-  <collection label="Configuration">
-    <view name="environments" />
-    <view name="runtimes" />
-  </collection>
+  <a href="https://github.com/splunk/deep-learning-toolkit/blob/master/docs/README.md" target="_blank">Docs</a>
   <view name="search" />
 </nav>

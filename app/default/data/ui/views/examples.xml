@@ -1,0 +1,3 @@
+<dashboard showsource="false" script="examples.js" stylesheet="examples.css" hideEdit="true">
+  <label>Examples</label>
+</dashboard>

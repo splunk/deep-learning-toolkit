@@ -50,7 +50,7 @@ class Attribute(object):
         self.docs = docs
 
 
-attribute_re = re.compile(r"^(\w+)\s*=\s*<(.+)>\s*$")
+attribute_re = re.compile(r"^(\w+)\s*=\s*(.*)\s*$")
 
 
 def parse_attribute(lines):

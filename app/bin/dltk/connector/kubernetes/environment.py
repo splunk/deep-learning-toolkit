@@ -118,6 +118,7 @@ class KubernetesEnvironment(Environment):
 
     def create_client_config(self):
         config = kubernetes_client.Configuration()
+        #raise Exception("DEBUG client_key: %s" % (self.client_key))
 
         if self.auth_mode == "aws-iam":
             # https://github.com/kubernetes-sigs/aws-iam-authenticator

@@ -1,6 +1,6 @@
 from dltk.core import connector, get_class
 from . environment import Environment
-
+from . conf import conf_name
 
 __all__ = [
     "exists",
@@ -9,7 +9,6 @@ __all__ = [
     "connect",
 ]
 
-conf_name = "dltk_environments"
 
 
 def get_conf(splunk):

@@ -1,6 +1,6 @@
 from dltk.core import connector, get_class
 from . environment import Environment
-from . conf import conf_name, get_conf
+from . conf import get_conf
 
 __all__ = [
     "exists",

@@ -2,9 +2,7 @@ from urllib.parse import parse_qs
 
 from dltk.core.rest import BaseRestHandler
 from dltk.core import connector
-from dltk.core import runtime
 from . import environment_api
-from dltk.core import is_truthy
 from dltk.core import get_label_for_name
 
 __all__ = [

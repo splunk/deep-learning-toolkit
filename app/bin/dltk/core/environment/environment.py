@@ -1,6 +1,6 @@
 from dltk.core.splunk import spec as spec_parser
 from splunklib.binding import UrlEncoded
-from . conf import conf_name
+from . conf import name as conf_name
 
 __all__ = [
     "Environment",
@@ -11,18 +11,18 @@ class Environment(object):
     _splunk = None
     _stanza = None
     _connector = None
+    _spec = None
 
     def __init__(self, splunk, stanza, connector):
         self._splunk = splunk
         self._stanza = stanza
         self._connector = connector
-        self._spec = None
 
     @property
     def spec(self):
         if self._spec == None:
             import os.path
-            spec_path = os.path.join(os.path.dirname(__file__), "..", "..", "..", "..", "README", conf_name+".conf.spec")
+            spec_path = os.path.join(os.path.dirname(__file__), "..", "..", "..", "..", "README", conf_name + ".conf.spec")
             with open(spec_path, "r") as spec_file:
                 spec_content = spec_file.read()
             self._spec = spec_parser.parse(spec_content)
@@ -80,12 +80,12 @@ class Environment(object):
             param_spec = self.get_param_spec(name)
             if param_spec:
                 value_spec = param_spec.value_spec
-                if value_spec == "<password>":                
+                if value_spec == "<password>":
                     passwords_realm = conf_name + "_" + self._stanza.name
                     storage_password_name = UrlEncoded(passwords_realm, encode_slash=True) + ":" + UrlEncoded(name, encode_slash=True)
                     if storage_password_name in self.splunk.storage_passwords:
                         storage_password = self.splunk.storage_passwords[storage_password_name]
-                        v=storage_password.clear_password
+                        v = storage_password.clear_password
                 return v
         if inherit:
             return self.connector.get_param(name)
@@ -113,7 +113,7 @@ class Environment(object):
                     if storage_password:
                         self.splunk.storage_passwords.delete(name, passwords_realm)
                 value = " "
-            # TODO fix value = something so that key exists!
+                # TODO fix value = something so that key exists!
         self._stanza.submit({
             name: value
         })

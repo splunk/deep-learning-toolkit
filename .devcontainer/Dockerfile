@@ -3,12 +3,10 @@
 #FROM splunk/splunk:8.0-debian
 FROM python:3.7
 
+# Install Python Dependencies
 COPY requirements.txt /tmp/pip-tmp/
 RUN pip3 --disable-pip-version-check --no-cache-dir install -r /tmp/pip-tmp/requirements.txt \
     && rm -rf /tmp/pip-tmp
-
-#RUN apt-get update \
-#    && apt-get -y install --no-install-recommends git
 
 # Install Docker
 RUN apt-get update \
@@ -31,7 +29,5 @@ RUN curl -s https://raw.githubusercontent.com/helm/helm/master/scripts/get-helm-
 # Allow host.docker.internal usage
 COPY copy-kube-config.sh /usr/local/share/
 RUN echo "source /usr/local/share/copy-kube-config.sh" | tee -a /root/.bashrc >> /root/.zshrc
-
-RUN which kubectl
 
 RUN git config --global core.autocrlf true

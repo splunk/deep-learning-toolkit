@@ -1,12 +1,16 @@
 // https://github.com/Microsoft/vscode-dev-containers/tree/master/containers/kubernetes-helm
 {
-	"name": "Splunk",
+	"name": "DLTK",
 	"dockerComposeFile": "docker-compose.yaml",
 	"service": "vscode",
 	"workspaceFolder": "/workspace",
 	"settings": {
 		"terminal.integrated.shell.linux": "/bin/bash",
 		"python.pythonPath": "/usr/local/bin/python",
+		"vs-kubernetes": {
+			"vs-kubernetes.kubectl-path.linux": "",
+			"vs-kubernetes.helm-path.linux": "",
+		},
 	},
 	"extensions": [
 		"ms-python.python",
@@ -15,6 +19,8 @@
 		"splunk.splunk",
 		"ms-vsliveshare.vsliveshare",
 		"github.vscode-pull-request-github",
+		"ms-kubernetes-tools.vscode-kubernetes-tools",
+		"ms-azuretools.vscode-docker",
 	],
 	"forwardPorts": [
 		8000

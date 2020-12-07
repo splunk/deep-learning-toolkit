@@ -5,7 +5,6 @@
 if [ "$SYNC_LOCALHOST_KUBECONFIG" = "true" ] && [ -d "/usr/local/share/kube-localhost" ]; then
     mkdir -p $HOME/.kube
     cp -r /usr/local/share/kube-localhost/* $HOME/.kube
-    ls $HOME/.kube
     chown -R $(id -u) $HOME/.kube
     sed -i -e "s/localhost/host.docker.internal/g" $HOME/.kube/config
     sed -i -e "s/127.0.0.1/host.docker.internal/g" $HOME/.kube/config

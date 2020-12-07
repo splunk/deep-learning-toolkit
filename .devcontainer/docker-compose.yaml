@@ -8,9 +8,10 @@ services:
 
     volumes:
       - ..:/workspace:cached
-
-      # Uncomment the next line to use Docker from inside the container. See https://aka.ms/vscode-remote/samples/docker-from-docker-compose for details.
-      # - /var/run/docker.sock:/var/run/docker.sock 
+      - /var/run/docker.sock:/var/run/docker.sock
+      - type: bind
+        source: ~/.kube
+        target: /usr/local/share/kube-localhost
 
     command: /bin/sh -c "sleep infinity"  
     network_mode: service:splunk

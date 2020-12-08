@@ -1,12 +1,19 @@
-// https://github.com/Microsoft/vscode-dev-containers/tree/master/containers/kubernetes-helm
 {
 	"name": "DLTK",
-	"dockerComposeFile": "docker-compose.yaml",
-	"service": "vscode",
+	"build": {
+		"dockerfile": "Dockerfile",
+		"context": ".",
+	},
+	"overrideCommand": false,
+	"runArgs": [
+		"--privileged",
+		"--tty",
+	],
+	"workspaceMount": "source=${localWorkspaceFolder},target=/workspace,type=bind,consistency=cached",
 	"workspaceFolder": "/workspace",
 	"settings": {
 		"terminal.integrated.shell.linux": "/bin/bash",
-		"python.pythonPath": "/usr/local/bin/python",
+		"python.pythonPath": "/usr/bin/python",
 		"vs-kubernetes": {
 			"vs-kubernetes.kubectl-path.linux": "",
 			"vs-kubernetes.helm-path.linux": "",
@@ -23,12 +30,12 @@
 		"ms-azuretools.vscode-docker",
 	],
 	"forwardPorts": [
-		8000
+		30080
 	],
 	"remoteEnv": {
 		"SYNC_LOCALHOST_KUBECONFIG": "true",
 		"SPLUNK_PASSWORD": "kljn2783Sd23r!",
 		"DLTK_ENVIRONMENT": "host_docker_internal",
 	},
-	"postStartCommand": ".devcontainer/copy-kube-config.sh && python .devcontainer/configure_splunk.py",
+	"postStartCommand": ".devcontainer/setup.sh",
 }

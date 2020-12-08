@@ -25,4 +25,5 @@
         "images/spark/driver",
         "images/base/config:images/base/config"
     ],
+    "python.pythonPath": "/usr/bin/python",
 }

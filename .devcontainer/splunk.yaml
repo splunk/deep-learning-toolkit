@@ -1,0 +1,61 @@
+kind: Pod
+apiVersion: v1
+metadata:
+  name: splunk
+  labels:
+    app: splunk
+spec:
+  containers:
+    - name: splunk
+      image: splunk/splunk:latest
+      env:
+        - name: SPLUNK_START_ARGS
+          value: "--accept-license"
+        - name: SPLUNK_PASSWORD
+          value: "kljn2783Sd23r!"
+      volumeMounts:
+        - mountPath: /tmp/defaults
+          name: splunk-defaults
+        - mountPath: /opt/splunk/etc/apps/dltk
+          name: dltk-app
+      resources:
+        requests:
+          cpu: "1"
+          memory: "1Gi"
+        limits:
+          cpu: "3"
+          memory: "5Gi"
+  volumes:
+    - name: splunk-defaults
+      configMap:
+        name: splunk-defaults
+    - name: dltk-app
+      hostPath:
+        path: /workspace/app
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: splunk
+spec:
+  selector:
+    app: splunk
+  ports:
+    - port: 8000
+      name: web
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: splunk
+spec:
+  rules:
+    - http:
+        paths:
+          - path: /splunk
+            pathType: Prefix
+            backend:
+              service:
+                name: splunk
+                port:
+                  name: web

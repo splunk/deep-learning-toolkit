@@ -16,7 +16,7 @@ def connect():
         app_name = os.getenv("DLTK_APP_NAME", "dltk")
         splunk = client.Service(
             username=os.getenv("SPLUNK_USERNAME", "admin"),
-            password=os.getenv("SPLUNK_PASSWORD", "kljn2783Sd23r!"),
+            password=os.getenv("SPLUNK_PASSWORD", "changeme"),
             host=os.getenv("SPLUNK_HOST", "localhost"),
             port=int(os.getenv("SPLUNK_PORT", "8089")),
             sharing="app",

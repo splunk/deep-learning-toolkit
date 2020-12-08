@@ -28,6 +28,5 @@ RUN curl -s https://raw.githubusercontent.com/helm/helm/master/scripts/get-helm-
 
 # Allow host.docker.internal usage
 COPY copy-kube-config.sh /usr/local/share/
-RUN echo "source /usr/local/share/copy-kube-config.sh" | tee -a /root/.bashrc >> /root/.zshrc
 
 RUN git config --global core.autocrlf true

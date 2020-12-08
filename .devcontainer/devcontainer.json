@@ -26,9 +26,9 @@
 		8000
 	],
 	"remoteEnv": {
-		"SYNC_LOCALHOST_KUBECONFIG": "true"
+		"SYNC_LOCALHOST_KUBECONFIG": "true",
+		"SPLUNK_PASSWORD": "kljn2783Sd23r!",
+		"DLTK_ENVIRONMENT": "host_docker_internal",
 	},
-	"postStartCommand": [
-		"python" , ".devcontainer/configure_dltk_environment.py"
-	]
+	"postStartCommand": ".devcontainer/copy-kube-config.sh && python .devcontainer/configure_splunk.py",
 }

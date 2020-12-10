@@ -32,34 +32,36 @@ if __name__ == "__main__":
             print("authentication error: %s" % e)
             exit(1)
         except Exception as e:
-            #err_msg = traceback.format_exc()
-            #print("%s" % err_msg)
+            err_msg = traceback.format_exc()
+            print("%s" % err_msg)
             time.sleep(1)
 
-    print("loading kubernetes config...")
+    #print("loading kubernetes config...")
+    # try:
+    #    print("/root/.kube/config: %s" % os.path.exists("/root/.kube/config"))
+    #    load_kube_config()
+    #    config = Configuration._default
+    # except Exception as e:
+    #    err_msg = traceback.format_exc()
+    #    print("%s" % err_msg)
+    #    exit(1)
+
+    print("creating dltk environment...")
     try:
-        print("/root/.kube/config: %s" % os.path.exists("/root/.kube/config"))
-        load_kube_config()
-        config = Configuration._default
+        environment_name = os.getenv("DLTK_ENVIRONMENT", "")
+        print("environment_name: %s" % environment_name)
+        environments = splunk.confs[environment_conf_name]
+        if environment_name in environments:
+            environments.delete(environment_name)
+        environment = environments.create(environment_name)
+        environment.submit({
+            "connector": "kubernetes",
+            "auth_mode": "in-cluster",
+            "ingress_mode": "ingress",
+            "ingress_class": "nginx",
+            "ingress_url": "http://ingress-nginx-controller.ingress-nginx",  # os.getenv("INGRESS_URL"),
+        })
     except Exception as e:
         err_msg = traceback.format_exc()
         print("%s" % err_msg)
         exit(1)
-
-    print("creating dltk environment...")
-    environment_name = os.getenv("DLTK_ENVIRONMENT", "")
-    print("environment_name: %s" % environment_name)
-    environments = splunk.confs[environment_conf_name]
-    if environment_name in environments:
-        environments.delete(environment_name)
-    environment = environments.create(environment_name)
-    environment.submit({
-        "connector": "kubernetes",
-        "auth_mode": "cert-key",
-        "ingress_mode": "node-port",
-        "node_port_url": "http://%s" % (urlparse(config.host).hostname),
-        "cluster_url": config.host,
-        "client_cert": base64.standard_b64encode(Path(config.cert_file).read_text().encode()),
-        "client_key": base64.standard_b64encode(Path(config.key_file).read_text().encode()),
-        "cluster_ca": base64.standard_b64encode(Path(config.ssl_ca_cert).read_text().encode()),
-    })

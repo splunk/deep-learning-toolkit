@@ -13,6 +13,8 @@ spec:
           value: "--accept-license"
         - name: SPLUNK_PASSWORD
           value: "kljn2783Sd23r!"
+        - name: SPLUNK_LAUNCH_CONF
+          value: "KUBERNETES_SERVICE_HOST=kubernetes.default.svc,KUBERNETES_SERVICE_PORT=443"
       volumeMounts:
         - mountPath: /tmp/defaults
           name: splunk-defaults
@@ -43,19 +45,40 @@ spec:
   ports:
     - port: 8000
       name: web
+    - port: 8089
+      name: api
 ---
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: splunk
+  name: splunk-web
 spec:
   rules:
     - http:
         paths:
-          - path: /splunk
+          - path: /splunk/web
             pathType: Prefix
             backend:
               service:
                 name: splunk
                 port:
                   name: web
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: splunk-api
+  annotations:
+    nginx.ingress.kubernetes.io/backend-protocol: "HTTPS"
+    nginx.ingress.kubernetes.io/rewrite-target: /$1
+spec:
+  rules:
+    - http:
+        paths:
+          - path: /splunk/api/(.*)
+            pathType: Prefix
+            backend:
+              service:
+                name: splunk
+                port:
+                  name: api

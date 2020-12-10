@@ -2,10 +2,12 @@ import os
 import logging
 import splunklib.client as client
 import splunklib.results as results
+from splunklib.binding import handler as base_handler
 import random
 import time
 import threading
 import re
+from urllib.parse import urlparse
 
 splunk = None
 
@@ -14,10 +16,23 @@ def connect():
     global splunk
     if not splunk:
         app_name = os.getenv("DLTK_APP_NAME", "dltk")
+
+        base_request = base_handler()
+        prefix = os.getenv("SPLUNK_PATH_PREFIX", "")
+
+        def request_with_prefix(url, message, **kwargs):
+            o = urlparse(url)
+            url = "%s://%s:%s/%s%s" % (o.scheme, o.hostname, o.port, prefix, o.path)
+            if o.query:
+                url += "?" + o.query
+            return base_request(url, message, **kwargs)
+
         splunk = client.Service(
+            handler=request_with_prefix if prefix else None,
             username=os.getenv("SPLUNK_USERNAME", "admin"),
             password=os.getenv("SPLUNK_PASSWORD", "changeme"),
             host=os.getenv("SPLUNK_HOST", "localhost"),
+            scheme=os.getenv("SPLUNK_SCHEME", "https"),
             port=int(os.getenv("SPLUNK_PORT", "8089")),
             sharing="app",
             app=app_name,
@@ -93,6 +108,9 @@ def search(query, log_search_log=False, raise_on_error=True):
         thread = threading.Thread(target=log_search_log_thread)
         thread.daemon = True
         thread.start()
+    else:
+        search_log_file = None
+        thread = None
 
     for result in rr:
         if isinstance(result, results.Message):

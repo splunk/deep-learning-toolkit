@@ -9,7 +9,7 @@
 		"--privileged",
 		"--tty",
 	],
-	"workspaceMount": "source=${localWorkspaceFolder},target=/workspace,type=bind,consistency=cached",
+	"workspaceMount": "source=${localWorkspaceFolder},target=/workspace,type=bind,consistency=default",
 	"workspaceFolder": "/workspace",
 	"settings": {
 		"terminal.integrated.shell.linux": "/bin/bash",
@@ -30,12 +30,18 @@
 		"ms-azuretools.vscode-docker",
 	],
 	"forwardPorts": [
-		30080
+		8000,
+		8443,
 	],
 	"remoteEnv": {
 		"SYNC_LOCALHOST_KUBECONFIG": "true",
 		"SPLUNK_PASSWORD": "kljn2783Sd23r!",
+		"SPLUNK_SCHEME": "http",
+		"SPLUNK_PORT": "8000",
+		"SPLUNK_PATH_PREFIX": "/splunk/api",
 		"DLTK_ENVIRONMENT": "host_docker_internal",
+		//"INGRESS_URL": "http://localhost:8000/",
+		//"PYTHONPATH": "/workspace/app/lib:/workspace/app/bin",
 	},
-	"postStartCommand": ".devcontainer/setup.sh",
+	"postStartCommand": ".devcontainer/post_start_setup.sh",
 }

@@ -1,5 +1,4 @@
 
-from dltk.core.rest import BaseRestHandler
 from dltk.core import get_class
 from . connector import Connector
 

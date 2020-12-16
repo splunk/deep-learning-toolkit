@@ -1,0 +1,25 @@
+version: "3.3"
+services:
+
+  vscode:
+    build: 
+      context: .
+      dockerfile: Dockerfile
+
+    volumes:
+      - ..:/workspace:cached
+
+      # Uncomment the next line to use Docker from inside the container. See https://aka.ms/vscode-remote/samples/docker-from-docker-compose for details.
+      # - /var/run/docker.sock:/var/run/docker.sock 
+
+    command: /bin/sh -c "sleep infinity"  
+    network_mode: service:splunk
+
+  splunk:
+    image: "splunk/splunk:latest"
+    environment:
+      SPLUNK_START_ARGS: "--accept-license"
+      SPLUNK_PASSWORD: "kljn2783Sd23r!"
+    volumes:
+      - "./splunk-default.yml:/tmp/defaults/default.yml"
+      - ../app:/opt/splunk/etc/apps/dltk:cached

@@ -1,0 +1,14 @@
+splunk:
+  conf:
+    - key: web
+      value:
+        directory: /opt/splunk/etc/system/local
+        content:
+          settings:
+            enableSplunkWebSSL: false
+    - key: inputs
+      value:
+        directory: /opt/splunk/etc/apps/splunk_httpinput/local
+        content:
+          http:
+            disabled: false

@@ -1,6 +1,6 @@
 from dltk.core import connector, get_class
 from . environment import Environment
-
+from . conf import get_conf
 
 __all__ = [
     "exists",
@@ -8,16 +8,6 @@ __all__ = [
     "get_all",
     "connect",
 ]
-
-conf_name = "dltk_environments"
-
-
-def get_conf(splunk):
-    try:
-        conf = splunk.confs[conf_name]
-    except KeyError:
-        raise Exception("ns=%s" % splunk.namespace)
-    return conf
 
 
 def exists(splunk, name):
@@ -52,7 +42,7 @@ def connect(splunk, name):
 
 
 def create(splunk, name, connector_name):
-    stanza = splunk.confs[conf_name].create(name)
+    stanza = get_conf(splunk).create(name)
     stanza.submit({
         "connector": connector_name,
     })
@@ -62,4 +52,4 @@ def create(splunk, name, connector_name):
 def delete(splunk, name):
     if not exists(splunk, name):
         raise Exception("environment '%s' does not exist" % name)
-    splunk.confs[conf_name].delete(name)
+    get_conf(splunk).delete(name)

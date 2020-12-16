@@ -4,7 +4,7 @@ import importlib
 
 from . handler import get_handler
 
-splunk = importlib.import_module("splunk")
+#splunk = importlib.import_module("splunk")
 
 __all__ = ["get_logger", "configure_logger"]
 

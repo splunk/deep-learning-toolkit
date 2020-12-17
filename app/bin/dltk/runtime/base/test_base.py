@@ -69,7 +69,8 @@ class TestEchoingDataBaseRuntime(BaseRuntimeTestCase):
             dltk_environment.get_name(),
             "fit",
         )
-        output_count = len(list(splunk_api.search(query, log_search_log=True, raise_on_error=True)))
+        results = list(splunk_api.search(query, log_search_log=True, raise_on_error=True))
+        output_count = len(results)
         self.assertEqual(output_count, 100, "Unexpected result count")
 
 

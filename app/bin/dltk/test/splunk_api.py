@@ -2,10 +2,12 @@ import os
 import logging
 import splunklib.client as client
 import splunklib.results as results
+from splunklib.binding import handler as base_handler
 import random
 import time
 import threading
 import re
+from urllib.parse import urlparse
 
 splunk = None
 
@@ -14,10 +16,23 @@ def connect():
     global splunk
     if not splunk:
         app_name = os.getenv("DLTK_APP_NAME", "dltk")
+
+        base_request = base_handler()
+        prefix = os.getenv("SPLUNK_PATH_PREFIX", "")
+
+        def request_with_prefix(url, message, **kwargs):
+            o = urlparse(url)
+            url = "%s://%s:%s/%s%s" % (o.scheme, o.hostname, o.port, prefix, o.path)
+            if o.query:
+                url += "?" + o.query
+            return base_request(url, message, **kwargs)
+
         splunk = client.Service(
+            handler=request_with_prefix if prefix else None,
             username=os.getenv("SPLUNK_USERNAME", "admin"),
-            password=os.getenv("SPLUNK_PASSWORD", "kljn2783Sd23r!"),
+            password=os.getenv("SPLUNK_PASSWORD", "changeme"),
             host=os.getenv("SPLUNK_HOST", "localhost"),
+            scheme=os.getenv("SPLUNK_SCHEME", "https"),
             port=int(os.getenv("SPLUNK_PORT", "8089")),
             sharing="app",
             app=app_name,
@@ -47,52 +62,59 @@ def search(query, log_search_log=False, raise_on_error=True):
     # service.jobs.export
     rr = results.ResultsReader(splunk.jobs.export(query, **{"id": sid}))
 
+    search_log_file = None
+    thread = None
+
     if log_search_log:
 
-        #logging.info("waiting for log file to exist...")
-        search_log_path = "/opt/splunk/var/run/splunk/dispatch/%s/search.log" % sid
-        while True:
-            if os.path.exists(search_log_path):
-                break
-            time.sleep(0.1)
-        #logging.info("all right - go ahead")
+        dispatch_dir = "/opt/splunk/var/run/splunk/dispatch"
+        if os.path.exists(dispatch_dir):
+            #logging.info("waiting for log file to exist...")
+            search_log_path = dispatch_dir + "/%s/search.log" % sid
+            while True:
+                if os.path.exists(search_log_path):
+                    break
+                time.sleep(0.1)
+            #logging.info("all right - go ahead")
 
-        search_log_file = open(search_log_path, 'r')
+            search_log_file = open(search_log_path, 'r')
 
-        ChunkedExternProcessor_expression = re.compile(r".*\s(\S+)\s+ChunkedExternProcessor - (.+)$")
+            ChunkedExternProcessor_expression = re.compile(r".*\s(\S+)\s+ChunkedExternProcessor - (.+)$")
 
-        def log_search_log_thread():
-            try:
-                #logging.info("search log:")
-                for line in follow(search_log_file):
-                    groups = ChunkedExternProcessor_expression.match(line)
-                    if groups:
-                        level = groups.group(1)
-                        msg = groups.group(2)
-                        #logging.info("%s: %s " % (level, msg))
-                        if level == "DEBUG":
-                            log = logging.debug
-                        elif level == "WARNING" or level == "WARN":
-                            log = logging.warning
-                        elif level == "ERROR":
-                            log = logging.error
-                        elif level == "INFO":
-                            log = logging.info
-                        elif level == "FATAL":
-                            log = logging.critical
-                        else:
-                            log = logging.warning
-                            msg = "UNEXPECTED search message type (%s): %s" % (level, msg)
-                        log("   %s" % (msg))
-                    # else:
-                    #    logging.info("non match: %s" % (line))
+            def log_search_log_thread():
+                try:
+                    #logging.info("search log:")
+                    for line in follow(search_log_file):
+                        groups = ChunkedExternProcessor_expression.match(line)
+                        if groups:
+                            level = groups.group(1)
+                            msg = groups.group(2)
+                            #logging.info("%s: %s " % (level, msg))
+                            if level == "DEBUG":
+                                log = logging.debug
+                            elif level == "WARNING" or level == "WARN":
+                                log = logging.warning
+                            elif level == "ERROR":
+                                log = logging.error
+                            elif level == "INFO":
+                                log = logging.info
+                            elif level == "FATAL":
+                                log = logging.critical
+                            else:
+                                log = logging.warning
+                                msg = "UNEXPECTED search message type (%s): %s" % (level, msg)
+                            log("   %s" % (msg))
+                        # else:
+                        #    logging.info("non match: %s" % (line))
 
-            except ValueError:
-                pass
+                except ValueError:
+                    pass
 
-        thread = threading.Thread(target=log_search_log_thread)
-        thread.daemon = True
-        thread.start()
+            thread = threading.Thread(target=log_search_log_thread)
+            thread.daemon = True
+            thread.start()
+        else:
+            logging.warning("dispatch folder doesn't exist")
 
     for result in rr:
         if isinstance(result, results.Message):
@@ -122,8 +144,9 @@ def search(query, log_search_log=False, raise_on_error=True):
         elif isinstance(result, dict):
             yield result
 
-    if log_search_log:
+    if search_log_file:
         search_log_file.close()
+    if thread:
         thread.join()
 
     logging.info("search finished")

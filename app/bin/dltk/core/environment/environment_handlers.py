@@ -23,13 +23,12 @@ class EnvironmentsHandler(BaseRestHandler):
         self.send_entries(results)
 
     def handle_POST(self):
-        params = parse_qs(self.request['payload'])
-        if "name" not in params:
+        runtime_name = self.get_param("name")
+        connector_name = self.get_param("connector")
+        if not runtime_name:
             raise Exception("missing name")
-        runtime_name = params["name"][0]
-        if "connector" not in params:
+        if not connector_name:
             raise Exception("missing connector")
-        connector_name = params["connector"][0]
         environment_api.create(
             self.splunk,
             runtime_name,
@@ -37,8 +36,7 @@ class EnvironmentsHandler(BaseRestHandler):
         )
 
     def handle_DELETE(self):
-        query = self.request['query']
-        runtime_name = query.get("name", "")
+        runtime_name = self.get_param("name")
         if not runtime_name:
             raise Exception("missing name")
         environment_api.delete(self.splunk, runtime_name)

@@ -13,20 +13,26 @@ import inspect
 
 from dltk.test.cases import *
 
+
+def new_id(self) -> str:
+    return "test.dltk." + self.__class__.__name__
+
+
 test_types = []
 for name in dir():
     t = getattr(sys.modules[__name__], name)
     if inspect.isclass(t):
         if issubclass(t, unittest.TestCase):
+            t.id = new_id
             test_types.append(t)
 
-suite = unittest.TestSuite()
-for test_type in test_types:
-    test = test_type()
-    suite.addTest(test)
-
-
 if __name__ == '__main__':
+
+    suite = unittest.TestSuite()
+    for test_type in test_types:
+        test = test_type()
+        suite.addTest(test)
+
     runner = unittest.TextTestRunner(failfast=True)
     result = runner.run(suite)
     if not result.wasSuccessful():

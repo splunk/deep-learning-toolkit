@@ -50,7 +50,7 @@ class InClusterConfigLoader(object):
     def _load_config(self):
         if (SERVICE_HOST_ENV_NAME not in self._environ or
                 SERVICE_PORT_ENV_NAME not in self._environ):
-            raise ConfigException("Service host/port is not set.")
+            raise ConfigException("Service host/port is not settt. %s" % os.getenv("KUBERNETES_SERVICE_HOST", ""))
 
         if (not self._environ[SERVICE_HOST_ENV_NAME] or
                 not self._environ[SERVICE_PORT_ENV_NAME]):

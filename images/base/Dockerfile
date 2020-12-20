@@ -43,16 +43,16 @@ RUN python -m spacy download en_core_web_sm
 RUN pip install pyarrow>=0.15 vaex>=3.0.0
 
 RUN pip install causalnex
-RUN pip install pm4py
 RUN pip install mlflow
-RUN pip install pyro-ppl 
+
+#RUN pip install pyro-ppl 
 #RUN pip install git+https://github.com/online-ml/river --upgrade
 #RUN pip install river
 
 RUN jupyter lab build
 RUN jupyter lab clean
 
-RUN apt-get update --fix-missing && apt-get -y install graphviz
+#RUN apt-get update --fix-missing && apt-get -y install graphviz
 
 RUN mkdir /dltk
 # Define working directory

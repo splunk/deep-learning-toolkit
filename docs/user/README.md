@@ -4,12 +4,8 @@ Before using DLTK, make sure you follow the [Administrator Guide](../admin/READM
 
 This guide is divided into the following sections (**work in progress**):
 
-- [Example Use Cases](examples.md)
 - [Core Concepts](core/README.md)
-  - [Environments](core/environments.md)
-  - [Algorithms](core/algorithms.md)
-  - [Runtimes](core/runtimes.md)
-  - [Models](core/models.md)
-- Using Runtimes
-  - [Spark](runtime/spark.md)
+- User Guide for DLTK Runtimes
   - [Base](runtime/base.md)
+  - [Spark](runtime/spark.md)
+- [Example Use Cases](examples.md)

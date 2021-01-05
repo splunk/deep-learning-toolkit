@@ -18,31 +18,32 @@ Important Note: Please take care that your changes in model code are available a
 Search and identify the data in Splunk that you are looking to develop a model on.
 From this dataset consider the features of the data that would be important for the model build, using SPL with filters, evals and stats commands as appropriate.
 
-![alt text](./images/0_search.png "Step 0: search for data in Splunk")
+![Step 0: search for data in Splunk](images/0_search.png)
 
 ### 1. Create New Algorithm (DLTK > Algorithms)
 Make sure that Deep Learning Toolkit is up and running. You can verify that by running one of the algorithm examples for the **base** image.
 
 Navigate to DLTK's algorithms page and `Create New Algorithm` from the top right of the page. Enter the *name*, *description* and *category* of your algorithm. Select `base` as Runtime and select the target environment if you want to deploy the algorithm automatically.
 
-![alt text](./images/1_create_algorithm.png "Step 1.1: create algorithm in DLTK")
+![Step 1.1: create algorithm in DLTK](images/1_create_algorithm.png)
 
-As soon as your algorithm is successfully deployed you can access JuypterLab with the `Editor` button on the right.
+As soon as your algorithm is successfully deployed you can see more details by opening the table row with the `>` button left. You typically also want to use `Add Method` in the `Actions` column on the right to define methods for your algorithm. The base image supports `fit`, `apply` and `summary`. Implement at least one to actually work with your algorithm. Now we can access JuypterLab with the `Editor` button on the right.
 
-![alt text](./images/1_deployed_editor.png "Step 1.2: access editor of the deployed algorithm")
+![Step 1.2: access editor of the deployed algorithm](images/1_deployed_editor.png)
 
 The default PW for DLTK's JupyterLab in the base image is `Splunk4DeepLearning`. You can change authentication and security options by building your own DLTK container and use them for your deployments.
 
-![alt text](./images/1_juypter_login.png "Step 1.3: login to Juypter Lab")
-
-![alt text](./images/1_juypter_lab.png "Step 1.4: open predefined juypter lab notebook for your algorithm")
+![Step 1.3: login to Juypter Lab](images/1_juypter_login.png)
 
 Open the notebook.ipynb file from the root notebooks folder and make yourself familiar with its structure. By default it contains a barebore structure of typical steps that you can implement for your custom model. Please see the explanation in the notebook and have a look at existing other algorithms to learn from those examples.
+
+![Step 1.4: open predefined juypter lab notebook for your algorithm](images/1_juypter_lab.png)
 
 Important note again: please use no spaces but only underscore _ separators in your notebook and model names to avoid errors caused by spaces in file and model names!
 
 ### 2. Send Sample Data to Deployed Algorithm (DLTK > Search)
-From your Splunk search you can send a data sample to Jupyter Lab model development using ` ... | compute mode=stage algorithm="Your cool new algorithm" environment="Docker" method="fit" fields="source,sourcetype,count" feature_variables="source,sourcetype" target_variables="count"`. Note that the parameter `mode=stage` just sends the data sample to JuypterLab **without** actually running any declared `method`. It is indicating that you wish to transfer a dataset over to the container to be worked on in the JupyterLab environment. In most cases you will start with a simple small dataset of a given structure of features and not with millions of datapoints in the very first place. This helps you to speed up on typical data science iteration cycles for drafting your model.
+From your Splunk search you can send a data sample to Jupyter Lab model development using ` ... | compute mode=stage algorithm="Grid Search SVM Regressor" environment="Docker" method="fit" fields="source,sourcetype,count" feature_variables="source,sourcetype" target_variables="count"`. Note that the parameter `mode=stage` just sends the data sample to JuypterLab **without** actually running any declared `method`. It is indicating that you wish to transfer a dataset over to the container to be worked on in the JupyterLab environment. In most cases you will start with a simple small dataset of a given structure of features and not with millions of datapoints in the very first place. This helps you to speed up on typical data science iteration cycles for drafting your model.
+![Step 2: juypter lab notebook with staged data](images/2_juypter_lab_staged_data.png)
 
 Hint: you can also use search sampling in Splunk or the `... | sample` command from MLTK to retrieve a randomly sampled subset of your data.
 
@@ -55,7 +56,7 @@ Hint: have a look at existing algorithms examples
 
 ### 4. Train Model (DLTK > Search)
 In case of creating a supervised model you typically split your data in SPL into a training set and a testing set, e.g. by using the `... | sample` command with `partitions` and `seed` options for consistent sampling: `... | sample partitions=10 seed=42 | where partition_number<7`
-Run the `... | compute` command for your algorithm on the training dataset using ` ... | compute algorithm="Your cool new algorithm" environment="Docker" method="fit" fields="source,sourcetype,count" feature_variables="source,sourcetype" target_variables="count" model_name="my_first_dltk_model"` ensuring that you are passing in the correct features and also parameters this time. You can pass any `key="value"` based parameters which will be exposed in the parameters of your `fit` and `apply` functions in your notebook. If it runs successfully the training results should be returned to you. In the case of errors check the job inspector and the `search.log`, noting that you may need to return to stage 3 to update the code. Additionally, if you have access to splunk `_internal`logs, you can also search in DLTK for `index=_internal sourcetype=dltk` to see if any deployment issues exist.
+Run the `... | compute` command for your algorithm on the training dataset using ` ... | compute algorithm="Grid Search SVM Regressor" environment="Docker" method="fit" fields="source,sourcetype,count" feature_variables="source,sourcetype" target_variables="count" model_name="my_first_dltk_model"` ensuring that you are passing in the correct features and also parameters this time. You can pass any `key="value"` based parameters which will be exposed in the parameters of your `fit` and `apply` functions in your notebook. If it runs successfully the training results should be returned to you. In the case of errors check the job inspector and the `search.log`, noting that you may need to return to stage 3 to update the code. Additionally, if you have access to splunk `_internal`logs, you can also search in DLTK for `index=_internal sourcetype=dltk` to see if any deployment issues exist.
 
 ### 5. Inspect and validate Model (DLTK > Algorithms > Editor > Jupyter Lab)
 Depending on your machine learning frameworks of choice you can use tools like *TensorBoard* (available within Jupyter Lab as widget) to check and validate how your model evolved over its training epochs etc.
@@ -63,7 +64,7 @@ Check histograms and other insights provided in TensorBoard or with the help of 
 
 ### 6. Test Model (DLTK > Search)
 Select the test dataset by partitioning the data again, for example using `... | sample partitions=10 seed=42 | where partition_number>=7` or simply using new data with the time picker in search.
-This time apply the model on the test dataset, for example using ` ... | compute algorithm="Your cool new algorithm" environment="Docker" method="apply" fields="source,sourcetype,count" feature_variables="source,sourcetype" model_name="my_first_dltk_model"`
+This time apply the model on the test dataset, for example using ` ... | compute algorithm="Grid Search SVM Regressor" environment="Docker" method="apply" fields="source,sourcetype,count" feature_variables="source,sourcetype" model_name="my_first_dltk_model"`
 In the case of errors check the job inspector and the search.log, noting that you may need to return to stage 3 to update the code. Additionally, if you have access to splunk `_internal`logs, you can also search in DLTK for `index=_internal sourcetype=dltk` to see if any deployment issues exist.
 To evaluate and score your model, you can use the `... | score` command from MLTK to evaluate the accuracy of the model using relevant metrics, for example a classification report or confusion matrix for a classification algorithm or R squared and RMSE for a regression or forecast algorithm. Alternatively, you can also do the scoring in your notebook.
 ### 7. Iterate, Refine or Retrain Model (DLTK > Search or DLTK > Algorithms > Editor > Jupyter Lab)

@@ -25,6 +25,7 @@ from __future__ import absolute_import
 import functools
 import itertools
 import operator
+import os
 import sys
 import types
 

